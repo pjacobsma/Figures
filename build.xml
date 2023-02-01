@@ -1,0 +1,64 @@
+<?xml version = "1.0" encoding = "CP1252"?>
+<project name="Figures" default="dist" basedir=".">
+    <description>
+    	Figures build file
+  	</description>
+    <!-- set global properties for this build -->
+    <property name="src" location="src" />
+    <property name="build" location="build" />
+    <property name="icons" location="icons" />
+    <property name="dist" location="C:\Launch4j" />
+    <property name="version" value="1.0" />
+ 
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp />
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}" />
+    </target>
+ 
+    <target name="compile" depends="init" description="compile the source">
+        <!-- Compile the java code from ${src} into ${build} -->
+        <javac debug="true" debuglevel="lines,vars,source" srcdir="${src}" destdir="${build}" verbose="true">
+        	<exclude name="**/*Test*.java"/>
+            <classpath>
+                <pathelement path=""/>
+            	 <fileset dir="lib">
+            	 	<include name="**/*.jar"/>
+            	 </fileset>
+	        </classpath>
+		</javac>
+    </target>
+ 
+    <target name="dist" depends="compile" description="generate the distribution">
+        <buildnumber />
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}" />
+    	<manifestclasspath property="jar.classpath" jarfile="Figures.jar">
+    	    <classpath>
+    	        <fileset dir="lib" includes="*.jar"/>
+    	    </classpath>
+    	</manifestclasspath> 
+        <copy todir="${dist}">
+            <fileset dir="${icons}">
+            	<include name="*.ico"/>
+            </fileset>
+        </copy>
+        <copy todir="${build}/css">
+            <fileset dir="css"/>
+        </copy>
+        <copy todir="${build}/icons">
+            <fileset dir="icons"/>
+        </copy>
+        <jar destfile="${dist}/Figures.jar" basedir="${build}" >
+    	    <zipgroupfileset dir="lib" includes="*.jar" excludes="junit*.jar, mockito*.jar, byte-buddy*.jar, objenesis*.jar" />
+        	<metainf dir="license"/>
+    	    <manifest>
+    	        <attribute name="Figures" value="main"/> 
+   	        	<attribute name="Main-Class" value="org.bluewindows.figures.app.Figures"/>
+    	    	<attribute name="Class-Path" value="${jar.classpath}" />
+    	    </manifest>
+    	</jar>
+    </target>
+ 
+</project>

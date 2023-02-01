@@ -1,0 +1,12 @@
+*.log
+*.log.*
+*.class
+/.svn/
+/Figures.properties
+/build/
+/.metadata/*
+/MyReports/
+/.settings/
+/.classpath
+/.project
+/build.number

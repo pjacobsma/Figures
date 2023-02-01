@@ -1,0 +1,159 @@
+.root{
+    -fx-font-size: 12pt;
+    -fx-font-family: "Calibri";
+}
+
+#BoldText{
+	-fx-font-weight: bold;
+}
+
+.text-area {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.left-aligned-column .label {
+	-fx-alignment: CENTER_LEFT;
+}
+
+.right-aligned-column .label {
+	-fx-alignment: CENTER_RIGHT;
+}
+
+.center-aligned-column .label {
+	-fx-alignment: CENTER;
+}
+
+Label {
+	-fx-font-size: 12pt;
+	-fx-pref-height: 15;
+	-fx-alignment: CENTER_LEFT;
+}
+
+TextField {
+	-fx-pref-height: 15;
+}
+
+ComboBox {
+	-fx-pref-height: 15;
+}
+
+HBox {
+	-fx-spacing: 5;
+	-fx-padding: 3;
+	-fx-alignment: CENTER_LEFT;
+}
+
+.top-button-bar {
+	-fx-spacing: 5;
+	-fx-padding: 5;
+	-fx-alignment: CENTER_LEFT;
+}
+
+VBox {
+	-fx-spacing: 5;
+	-fx-padding: 3;
+}
+
+GridPane {
+	-fx-padding: 3;
+	-fx-hgap: 3;
+	-fx-vgap: 0;
+}
+
+.tab-header-area .tab{
+    -fx-border-radius: 7 7 0 0;
+    -fx-background-radius: 7 7 0 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-padding: 0 7 2 7; 
+}
+
+.tab:selected .tab-label { 
+    -fx-font-weight: bold;
+}
+
+.toggle-button:selected {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-font-weight: bold;
+}
+
+.check-box:selected {
+    -fx-font-weight: bold;
+}
+
+.radio-button:selected {
+    -fx-font-weight: bold;
+}
+
+.combo-box.selected-bold>.list-cell {
+    -fx-font-weight: bold;
+}
+
+.button:pressed {
+    -fx-font-weight: bold;
+}
+
+.datepicker > .arrow-button {
+	-fx-padding: 0;
+}
+
+.unpadded {
+	-fx-padding: 0;
+	-fx-hgap: 0;
+	-fx-vgap: 0;
+}
+
+.paddedGrid {
+	-fx-padding: 3;
+	-fx-hgap: 3;
+	-fx-vgap: 5;
+}
+
+.bordered {
+	-fx-border-style: solid inside;
+	-fx-border-width: 2;
+}
+
+.transparentTextField {
+    -fx-pref-height: 12;
+    -fx-background-color: none;
+    -fx-background-insets: 0;
+    -fx-padding: 1 3 1 3;
+    -fx-effect: none;
+}
+
+.transparentTextArea {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+}
+
+.transparentTextArea .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.transparentTextArea .scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+
+.transparentTextArea .scroll-pane .content{
+    -fx-background-color: transparent;
+ }
+
+.tooltip {
+    -fx-show-delay: 250ms;
+}
+
+.dialog-pane:header .header-panel {
+   -fx-padding: 0.9em 0.9em 0.9em 0.9em;
+}
+
+.red-text {
+    -fx-text-fill: Red;
+}
+
+.blue-text {
+    -fx-text-fill: Blue;
+}
+
