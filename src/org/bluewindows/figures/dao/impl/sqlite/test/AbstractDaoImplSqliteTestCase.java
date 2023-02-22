@@ -101,7 +101,7 @@ public class AbstractDaoImplSqliteTestCase {
 	protected Account saveTestAccount(String name, int accountID) throws Exception{
 		CallResult result = daoImplJdbc.executeUpdateStatement("INSERT INTO " + ACCOUNT_STORE_NAME + 
 			" values(" + accountID + ",'" + name + "', '"  + AccountType.CHECKING.toString() + "',0,0,'" +
-			19990101 + "','C:\\Imports')"); 
+			19990101 + "','" + 19990101 + "','C:\\Imports')"); 
 		assertTrue(result.isGood());
 		Account account = new Account(accountID);
 		account.setName(name);

@@ -54,7 +54,8 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 	
 	@Test
 	public void testGetTransactionDateRange() throws Exception {
-		Account account = new Account(0, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account = new Account(0, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		accountDao.addAccount(account);
 		CallResult result = accountDao.getAccounts();
 		assertTrue(result.isGood());
@@ -77,12 +78,14 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 	
 	@Test
 	public void testGetTransactions() throws Exception {
-		Account account1 = new Account(3, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account1 = new Account(3, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+				new TransactionDate("20010101"), new TransactionDate("20010101"));
 		CallResult result = accountDao.addAccount(account1);
 		assertTrue(result.isGood());
 		result = accountDao.getAccounts();
 		assertTrue(result.isGood());
-		Account account2 = new Account(4, "TestSavings", AccountType.SAVINGS, new FilterSet("Savings"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account2 = new Account(4, "TestSavings", AccountType.SAVINGS, new FilterSet("Savings"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		result = accountDao.addAccount(account2);
 		assertTrue(result.isGood());
 		result = accountDao.getAccounts();
@@ -115,7 +118,8 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 
 	@Test
 	public void testAddTransactions() throws Exception {
-		Account account = new Account(1, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account = new Account(1, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		accountDao.addAccount(account);
 		CallResult result = accountDao.getAccounts();
 		assertTrue(result.isGood());
@@ -145,7 +149,7 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 	@Test
 	public void testGetDistinctValues() throws Exception {
 		Account account = new Account(1, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"),
-			new TransactionDate("20010101"));
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		accountDao.addAccount(account);
 		CallResult result = accountDao.getAccounts();
 		assertTrue(result.isGood());
@@ -270,7 +274,8 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 
 	@Test
 	public void testUpdateTransaction() throws Exception {
-		Account account = new Account(0, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account = new Account(0, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		CallResult result = accountDao.addAccount(account);
 		assertTrue(result.isGood());
 		result = accountDao.getAccounts();
@@ -328,12 +333,14 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 	
 	@Test
 	public void testDeleteTransactions() throws Exception {
-		Account account1 = new Account(1, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account1 = new Account(1, "TestChecking", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		CallResult result = accountDao.addAccount(account1);
 		assertTrue(result.isGood());
 		result = accountDao.getAccounts();
 		assertTrue(result.isGood());
-		Account account2 = new Account(2, "TestSavings", AccountType.SAVINGS, new FilterSet("Savings"), new Money("0.00"), new TransactionDate("20010101"));
+		Account account2 = new Account(2, "TestSavings", AccountType.SAVINGS, new FilterSet("Savings"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		result = accountDao.addAccount(account2);
 		assertTrue(result.isGood());
 		result = accountDao.getAccounts();

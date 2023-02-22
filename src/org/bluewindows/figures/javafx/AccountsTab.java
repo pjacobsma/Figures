@@ -69,7 +69,6 @@ import org.bluewindows.figures.service.impl.javafx.DisplayServiceImplJavaFX;
 import org.controlsfx.control.CheckComboBox;
 
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -1508,12 +1507,12 @@ public class AccountsTab {
 		return new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent arg0) {
-				applyFilters();
+				applyFilters(false);
 			}
 		};
 	}
 	
-	private void applyFilters() {
+	private void applyFilters(boolean newTransactionsFiltered) {
 		ServiceFactory.getInstance().getDisplaySvc().clearStatus();
 		if (openAccount.getFilterSet().getID() == 0) {
         	ServiceFactory.getInstance().getDisplaySvc().setStatusBad("No filter set has been selected for this account.  Use the Account Settings button to select a filter set.");
@@ -1528,7 +1527,7 @@ public class AccountsTab {
         	ServiceFactory.getInstance().getDisplaySvc().setStatusBad("No filters have been defined for the filter set associated with this account.  Use the Make New Filters button to create filters.");
         	return;
 		}
-		Task<CallResult> task = getFilterTask(openAccount);
+		Task<CallResult> task = getFilterTask(openAccount, newTransactionsFiltered);
 		task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 		    public void handle(WorkerStateEvent t) {
@@ -1561,12 +1560,19 @@ public class AccountsTab {
 		new Thread(task).start();
 	}
 
-	private Task<CallResult> getFilterTask(Account account){
+	private Task<CallResult> getFilterTask(Account account, boolean newTransactionsFiltered){
 		return new Task<CallResult>() {
 			@Override protected CallResult call() throws Exception {
-				CallResult result = ServiceFactory.getInstance().getMaintenanceSvc().filterAndUpdateTransactions(account);
+				CallResult filterResult = ServiceFactory.getInstance().getMaintenanceSvc().filterAndUpdateTransactions(account);
 				ServiceFactory.getInstance().getDisplaySvc().setCursor(CursorType.WAIT);
-				return result;
+				if (newTransactionsFiltered) {
+					if (filterResult.isGood()) {
+						account.setLastFilteredDate(account.getLastLoadedDate());
+						CallResult result = ServiceFactory.getInstance().getPersistenceSvc().updateAccount(account);
+						if (result.isBad()) filterResult = result;
+					}
+				}
+				return filterResult;
 			}
 		};
 	}
@@ -1606,7 +1612,7 @@ public class AccountsTab {
 		stage.setOnHidden((WindowEvent event1) -> {
 			stage.close();
         	if (newFiltersPane.isDataChanged()) {
-        		applyFilters();
+        		applyFilters(true);
         	}
 	    });
 		stage.setOnCloseRequest(event2 -> {
@@ -1675,7 +1681,7 @@ public class AccountsTab {
 				}
 			}
 			displayTransactions(displayTransactionList);
-			transactionTable.prefHeightProperty().bind(transactionTable.fixedCellSizeProperty().multiply(Bindings.size(transactionTable.getItems()).add(2.1)));
+			transactionTable.prefHeightProperty().bind(transactionTable.fixedCellSizeProperty().multiply(transactionTable.getItems().size()).add(2.1));
 			transactionTable.refresh();
 			// Preserve the sort order, if any
 			if (sortOrder.size() > 0) {

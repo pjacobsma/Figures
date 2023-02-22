@@ -32,6 +32,7 @@ public class Account {
 	private FilterSet filterSet;
 	private Money initialBalance = new Money("0.00");
 	private TransactionDate lastLoadedDate;
+	private TransactionDate lastFilteredDate;
 	private String importFolder = "";
 	private List<Transaction> tranList = new ArrayList<Transaction>();
 
@@ -42,13 +43,15 @@ public class Account {
 		this.filterSet = filterSet;
 	}
 
-	public Account(int id, String name, AccountType type, FilterSet filterSet, Money initialBalance, TransactionDate lastLoadedDate){
+	public Account(int id, String name, AccountType type, FilterSet filterSet, Money initialBalance, 
+			TransactionDate lastLoadedDate, TransactionDate lastFilteredDate){
 		this.id = id;
 		this.name = name;
 		this.type = type;
 		this.filterSet = filterSet;
 		this.initialBalance = initialBalance;
 		this.lastLoadedDate = lastLoadedDate;
+		this.setLastFilteredDate(lastFilteredDate);
 	}
 	
 	public Account(int id) {
@@ -102,7 +105,15 @@ public class Account {
 	public void setLastLoadDate(TransactionDate lastLoadDate) {
 		this.lastLoadedDate = lastLoadDate;
 	}
+	
+	public TransactionDate getLastFilteredDate() {
+		return lastFilteredDate;
+	}
 
+	public void setLastFilteredDate(TransactionDate lastFilteredDate) {
+		this.lastFilteredDate = lastFilteredDate;
+	}
+	
 	public String getImportFolder() {
 		return importFolder;
 	}
@@ -173,5 +184,6 @@ public class Account {
 			return false;
 		return true;
 	}
-	
+
+
 }

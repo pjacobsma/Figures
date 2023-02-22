@@ -68,6 +68,7 @@ public abstract class Persistence {
 	public static final String BALANCE = "Balance";
 	public static final String INITIAL_BALANCE = "InitialBalance";
 	public static final String LAST_LOAD_DATE = "LastLoadDate";
+	public static final String LAST_FILTER_DATE = "LastFilterDate";
 	public static final String SUMMARY_FIELDS = "SummaryFields";
 	public static final String TRANSACTION_INCLUSION = "TransactionInclusion";
 	public static final String DEDUCTIBLE_INCLUSION = "DeductibleInclusion";

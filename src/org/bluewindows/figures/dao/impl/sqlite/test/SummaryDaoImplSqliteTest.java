@@ -1195,11 +1195,14 @@ public class SummaryDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 	@SuppressWarnings("unchecked")
 	private void loadTestData() throws Exception {
 		// Make three accounts, each with two withdrawals and two deposits
-		account1 = new Account(1, "Bank A", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		account1 = new Account(1, "Bank A", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		assertTrue(accountDao.addAccount(account1).isGood());
-		account2 = new Account(2, "Bank B", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		account2 = new Account(2, "Bank B", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		assertTrue(accountDao.addAccount(account2).isGood());
-		account3 = new Account(3, "Bank C", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), new TransactionDate("20010101"));
+		account3 = new Account(3, "Bank C", AccountType.CHECKING, new FilterSet("Checking"), new Money("0.00"), 
+			new TransactionDate("20010101"), new TransactionDate("20010101"));
 		assertTrue(accountDao.addAccount(account3).isGood());
 		CallResult result = accountDao.getAccounts();
 		assertTrue(result.isGood());

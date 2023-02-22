@@ -126,7 +126,14 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 			return result;
 		}
 		// Save this import start date to use as a starting date for defining filters for "new" transactions
-		account.setLastLoadDate(transactionsToImport.get(0).getDate());
+		// If multiple files are loaded, retain the earliest load date that hasn't yet been filtered
+		if (account.getLastLoadedDate().compareTo(transactionsToImport.get(0).getDate()) < 0) {
+			if (account.getLastFilteredDate().equals(account.getLastLoadedDate())) {
+				account.setLastLoadDate(transactionsToImport.get(0).getDate());
+			}
+		}else {
+			account.setLastLoadDate(transactionsToImport.get(0).getDate());
+		}
 		result = ServiceFactory.getInstance().getPersistenceSvc().updateAccount(account);
 		if (result.isBad()) {
 			ServiceFactory.getInstance().getPersistenceSvc().rollBackTransaction();

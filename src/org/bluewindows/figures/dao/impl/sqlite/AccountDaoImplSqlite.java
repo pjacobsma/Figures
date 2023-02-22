@@ -108,12 +108,13 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 		try {
 			PreparedStatement pStmt = prepareStatement("INSERT INTO " + ACCOUNT_STORE_NAME + 
 				" (" + NAME + ", " + TYPE + ", " +
-				FILTER_SET_ID + ", " + INITIAL_BALANCE + ", " + LAST_LOAD_DATE + ") VALUES(?,?,?,?,?)");
+				FILTER_SET_ID + ", " + INITIAL_BALANCE + ", " + LAST_LOAD_DATE + ", " + LAST_FILTER_DATE + ") VALUES(?,?,?,?,?,?)");
 			pStmt.setString(1,account.getName());
 			pStmt.setString(2, account.getType().toString());
 			pStmt.setInt(3, account.getFilterSet().getID());
 			pStmt.setDouble(4, Double.valueOf(account.getInitialBalance().toStringNumber()));
 			pStmt.setString(5, account.getLastLoadedDate().value().format(JDBC_DATE_FORMAT));
+			pStmt.setString(6, account.getLastFilteredDate().value().format(JDBC_DATE_FORMAT));
 			pStmt.executeUpdate();
 			pStmt.close();
 		} catch (SQLException e) {
@@ -131,6 +132,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 			", " + FILTER_SET_ID + " = " + account.getFilterSet().getID() + " " +
 			", " + INITIAL_BALANCE + " = " + account.getInitialBalance().getValue() + " " +
 			", " + LAST_LOAD_DATE + " = '" + account.getLastLoadedDate().value().format(JDBC_DATE_FORMAT) + "' " +
+			", " + LAST_FILTER_DATE + " = '" + account.getLastFilteredDate().value().format(JDBC_DATE_FORMAT) + "' " +
 			", " + IMPORT_FOLDER + " = '" + account.getImportFolder() + "' " +
 			"WHERE " + ID + " = " + account.getID());
 	}
@@ -152,8 +154,11 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 				AccountType type = AccountType.valueOf(rs.getString(TYPE));
 				result = mapDate(rs, LAST_LOAD_DATE);
 				if (result.isBad()) return result;
+				TransactionDate lastLoadDate = (TransactionDate)result.getReturnedObject();
+				result = mapDate(rs, LAST_FILTER_DATE);
+				if (result.isBad()) return result;
 				Account account = new Account(rs.getInt(ID), rs.getString(NAME), type, filterSet, 
-						new Money(rs.getString(INITIAL_BALANCE)), (TransactionDate)result.getReturnedObject());
+						new Money(rs.getString(INITIAL_BALANCE)), lastLoadDate, (TransactionDate)result.getReturnedObject());
 				if (rs.getString(IMPORT_FOLDER) != null && !rs.getString(IMPORT_FOLDER).isEmpty()) {
 					account.setImportFolder(rs.getString(IMPORT_FOLDER));
 				}

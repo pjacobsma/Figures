@@ -47,6 +47,7 @@ import static org.bluewindows.figures.domain.persistence.Persistence.ID;
 import static org.bluewindows.figures.domain.persistence.Persistence.IMPORT_FOLDER;
 import static org.bluewindows.figures.domain.persistence.Persistence.INITIAL_BALANCE;
 import static org.bluewindows.figures.domain.persistence.Persistence.LAST_LOAD_DATE;
+import static org.bluewindows.figures.domain.persistence.Persistence.LAST_FILTER_DATE;
 import static org.bluewindows.figures.domain.persistence.Persistence.MEMO;
 import static org.bluewindows.figures.domain.persistence.Persistence.NAME;
 import static org.bluewindows.figures.domain.persistence.Persistence.NUMBER;
@@ -313,6 +314,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		sb.append(FILTER_SET_ID).append(" INTEGER, ");
 		sb.append(INITIAL_BALANCE).append(" REAL, ");
 		sb.append(LAST_LOAD_DATE).append(" DATE, ");
+		sb.append(LAST_FILTER_DATE).append(" DATE, ");
 		sb.append(IMPORT_FOLDER).append(" VARCHAR) ");
 		defs.add(sb.toString());
 		sb = new StringBuilder();

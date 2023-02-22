@@ -68,9 +68,11 @@ public class AccountDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 
 	@Test
 	public void testGetLastAccount() throws Exception {
-		Account account1 = new Account(0, "First Third", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), new TransactionDate("19990101"));
+		Account account1 = new Account(0, "First Third", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), 
+			new TransactionDate("19990101"), new TransactionDate("19990101"));
 		CallResult result = accountDao.addAccount(account1);
-		Account account2 = new Account(0, "Able Bank", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), new TransactionDate("19990101"));
+		Account account2 = new Account(0, "Able Bank", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), 
+			new TransactionDate("19990101"), new TransactionDate("19990101"));
 		result = accountDao.addAccount(account2);
 		assertTrue(result.isGood());
 		result = accountDao.getLastAccount();
@@ -94,7 +96,8 @@ public class AccountDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 
 	@Test
 	public void testAddAccount() throws Exception {
-		Account account = new Account(1, "TestChecking", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), new TransactionDate("19990101"));
+		Account account = new Account(1, "TestChecking", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), 
+			new TransactionDate("19990101"), new TransactionDate("19990101"));
 		CallResult result = accountDao.addAccount(account);
 		assertTrue(result.isGood());
 		assertTrue(account.getID() != 0);
@@ -117,7 +120,8 @@ public class AccountDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 	public void testAddAccountWithInvalidFilterSetID() throws Exception {
 		//Verify referential integrity check for Filter Set
 		FilterSet filterSet = new FilterSet(100, "Bad Set", "", "", "");
-		Account account = new Account(100, "TestChecking", AccountType.CHECKING, filterSet, new Money("0.00"), new TransactionDate("19990101"));
+		Account account = new Account(100, "TestChecking", AccountType.CHECKING, filterSet, new Money("0.00"), 
+			new TransactionDate("19990101"), new TransactionDate("19990101"));
 		CallResult result = accountDao.addAccount(account);
 		assertTrue(result.isBad());
 		assertEquals("Invalid filter set ID: 100", result.getErrorMessage());
@@ -125,7 +129,8 @@ public class AccountDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 	
 	@Test
 	public void testUpdateAccount() throws Exception {
-		Account account = new Account(0, "TestChecking", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), new TransactionDate("19990101"));
+		Account account = new Account(0, "TestChecking", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), 
+			new TransactionDate("19990101"), new TransactionDate("19990101"));
 		account.setImportFolder("C:\\Imports");
 		CallResult result = accountDao.addAccount(account);
 		assertTrue(result.isGood());
@@ -146,7 +151,8 @@ public class AccountDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testDeleteAccount() throws Exception {
-		Account account = new Account(1, "TestChecking", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), new TransactionDate("19990101"));
+		Account account = new Account(1, "TestChecking", AccountType.CHECKING, FilterSet.NONE, new Money("0.00"), 
+			new TransactionDate("19990101"), new TransactionDate("19990101"));
 		CallResult result = accountDao.addAccount(account);
 		assertTrue(result.isGood());
 		result = accountDao.deleteAccount(account);

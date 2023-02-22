@@ -120,10 +120,12 @@ public class PersistenceServiceImpl implements PersistenceService {
 		result = filterSetDao.getLastSet();
 		if (result.isBad()) return result;
 		savingsFilterSet = (FilterSet)result.getReturnedObject();
-		Account checkingAccount = new Account(0, "Checking", AccountType.CHECKING, checkingFilterSet, Money.ZERO, TransactionDate.MINIMUM_DATE);
+		Account checkingAccount = new Account(0, "Checking", AccountType.CHECKING, checkingFilterSet, Money.ZERO, 
+			TransactionDate.MINIMUM_DATE, TransactionDate.MINIMUM_DATE);
 		result = accountDao.addAccount(checkingAccount);
 		if (result.isBad()) return result;
-		Account savingsAccount = new Account(0, "Savings", AccountType.SAVINGS, savingsFilterSet, Money.ZERO, TransactionDate.MINIMUM_DATE);
+		Account savingsAccount = new Account(0, "Savings", AccountType.SAVINGS, savingsFilterSet, Money.ZERO, 
+			TransactionDate.MINIMUM_DATE, TransactionDate.MINIMUM_DATE);
 		result = accountDao.addAccount(savingsAccount);
 		if (result.isBad()) return result;
 		result = accountDao.getAccounts();

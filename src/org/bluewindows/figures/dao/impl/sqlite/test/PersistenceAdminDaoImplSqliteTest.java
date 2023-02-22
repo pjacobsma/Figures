@@ -71,14 +71,15 @@ public class PersistenceAdminDaoImplSqliteTest {
 	public void testOpenNewAccountTable() throws Exception {
 		// openNew is called above in the setUp method
 		List<String> tableColumns = getTableColumns(ACCOUNT_STORE_NAME);
-		assertEquals(7, tableColumns.size());
+		assertEquals(8, tableColumns.size());
 		assertEquals("0:ID:INTEGER:0:null", tableColumns.get(0));
 		assertEquals("1:Name:VARCHAR:1:null", tableColumns.get(1));
 		assertEquals("2:Type:VARCHAR:1:null", tableColumns.get(2));
 		assertEquals("3:FilterSetID:INTEGER:0:null", tableColumns.get(3));
 		assertEquals("4:InitialBalance:REAL:0:null", tableColumns.get(4));
 		assertEquals("5:LastLoadDate:DATE:0:null", tableColumns.get(5));
-		assertEquals("6:ImportFolder:VARCHAR:0:null", tableColumns.get(6));
+		assertEquals("6:LastFilterDate:DATE:0:null", tableColumns.get(6));
+		assertEquals("7:ImportFolder:VARCHAR:0:null", tableColumns.get(7));
 	}
 	
 	@Test

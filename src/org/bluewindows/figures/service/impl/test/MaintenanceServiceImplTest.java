@@ -104,6 +104,7 @@ public class MaintenanceServiceImplTest extends AbstractDaoImplSqliteTestCase {
 		assertEquals("Filtered Description", account.getTransactions().get(0).getDescription());
 		assertEquals(new Money(1.00), account.getTransactions().get(1).getAmount());
 		assertEquals(new Money(1.00), account.getTransactions().get(1).getBalance());
+		assertEquals(transaction1.getDate(), account.getLastLoadedDate());
 	}
 	
 	@Test
@@ -144,10 +145,10 @@ public class MaintenanceServiceImplTest extends AbstractDaoImplSqliteTestCase {
 		
 		// File 2
 		transactions = new ArrayList<Transaction>();
-		transaction1 = makeTestTransaction("20200102", "3.00");
-		transaction2 = makeTestTransaction("20200102", "4.00");
-		transactions.add(transaction1);
-		transactions.add(transaction2);
+		Transaction transaction3 = makeTestTransaction("20200102", "3.00");
+		Transaction transaction4 = makeTestTransaction("20200102", "4.00");
+		transactions.add(transaction3);
+		transactions.add(transaction4);
 		importResult.setReturnedObject(transactions);
 		Mockito.when(importService.importFile(file, account)).thenReturn(importResult);
 		result = ServiceFactory.getInstance().getMaintenanceSvc().importFile(file, account);
@@ -165,6 +166,7 @@ public class MaintenanceServiceImplTest extends AbstractDaoImplSqliteTestCase {
 		assertEquals(new Money(3.00), account.getTransactions().get(2).getBalance());
 		assertEquals(new Money(1.00), account.getTransactions().get(3).getAmount());
 		assertEquals(new Money(1.00), account.getTransactions().get(3).getBalance());
+		assertEquals(transaction1.getDate(), account.getLastLoadedDate());
 	}
 	
 	@Test
@@ -185,10 +187,10 @@ public class MaintenanceServiceImplTest extends AbstractDaoImplSqliteTestCase {
 		
 		// File 2
 		List<Transaction> transactions2 = new ArrayList<Transaction>();
-		transaction1 = makeTestTransaction("20200101", "1.00");
-		transaction2 = makeTestTransaction("20200101", "2.00");
-		transactions2.add(transaction1);
-		transactions2.add(transaction2);
+		Transaction transaction3 = makeTestTransaction("20200101", "1.00");
+		Transaction transaction4 = makeTestTransaction("20200101", "2.00");
+		transactions2.add(transaction3);
+		transactions2.add(transaction4);
 		importResult.setReturnedObject(transactions2);
 		Mockito.when(importService.importFile(file, account)).thenReturn(importResult);
 		result = ServiceFactory.getInstance().getMaintenanceSvc().importFile(file, account);
@@ -206,6 +208,7 @@ public class MaintenanceServiceImplTest extends AbstractDaoImplSqliteTestCase {
 		assertEquals(new Money(3.00), account.getTransactions().get(2).getBalance());
 		assertEquals(new Money(1.00), account.getTransactions().get(3).getAmount());
 		assertEquals(new Money(1.00), account.getTransactions().get(3).getBalance());
+		assertEquals(transaction3.getDate(), account.getLastLoadedDate());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -415,6 +418,7 @@ public class MaintenanceServiceImplTest extends AbstractDaoImplSqliteTestCase {
 	private Account makeTestAccount() {
 		Account account = new Account(1, "Checking", AccountType.CHECKING, null);
 		account.setLastLoadDate(new TransactionDate());
+		account.setLastFilteredDate(new TransactionDate());
 		CallResult result = ServiceFactory.getInstance().getPersistenceSvc().addAccount(account);
 		assertTrue(result.isGood());
 		result = ServiceFactory.getInstance().getPersistenceSvc().getAccounts();

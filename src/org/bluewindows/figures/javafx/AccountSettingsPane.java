@@ -365,7 +365,7 @@ public class AccountSettingsPane extends AbstractNewDataPane {
 		if (accountNameChanged || initialBalanceApplied || currentBalanceApplied || filterSetChanged) {
 			if (account == null) {
 				account = new Account(0, accountName.getText(), getAccountType(), getFilterSet(), new Money(initialBalance.getText()), 
-				TransactionDate.MINIMUM_DATE);
+				TransactionDate.MINIMUM_DATE, TransactionDate.MINIMUM_DATE);
 				result = ServiceFactory.getInstance().getPersistenceSvc().addAccount(account);
 			}else {
 				result = ServiceFactory.getInstance().getPersistenceSvc().updateAccount(account);
