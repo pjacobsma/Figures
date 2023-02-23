@@ -95,7 +95,7 @@ public class Figures {
 	
 	static {
 		STANDARD_DATE_LIST.add("MM/dd/yyyy");
-		STANDARD_DATE_LIST.add("MM-dd-YYYY");
+		STANDARD_DATE_LIST.add("MM-dd-yyyy");
 		STANDARD_DATE_LIST.add("yyyy/MM/dd");
 		STANDARD_DATE_LIST.add("yyyy-MM-dd");
 		STANDARD_DATE_LIST.add("yyyy.MM.dd");
@@ -105,12 +105,6 @@ public class Figures {
 		for (String dateFormat : STANDARD_DATE_LIST) {
 			DATE_FORMAT_MAP.put(dateFormat, DateTimeFormatter.ofPattern(dateFormat));
 		}
-		DATE_FORMAT_MAP.put("M/d/yy", DateTimeFormatter.ofPattern("MM/dd/yyyy"));
-		DATE_FORMAT_MAP.put("M/dd/yy", DateTimeFormatter.ofPattern("MM/dd/yyyy"));
-		DATE_FORMAT_MAP.put("MM/d/yy", DateTimeFormatter.ofPattern("MM/dd/yyyy"));
-		DATE_FORMAT_MAP.put("MM/dd/yy", DateTimeFormatter.ofPattern("MM/dd/yyyy"));
-		DATE_FORMAT_MAP.put("d/MM/yyyy", DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-		DATE_FORMAT_MAP.put("d.MM.yyyy", DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 		
 		DEFAULT_CATEGORIES.add(Category.NONE);
 		DEFAULT_CATEGORIES.add(new Category(1, "Appliances"));
