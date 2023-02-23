@@ -25,6 +25,7 @@ import java.util.List;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.Transaction;
+import org.bluewindows.figures.domain.TransactionDate;
 
 public interface TransactionDao {
 	
@@ -40,6 +41,6 @@ public interface TransactionDao {
 	
 	public CallResult deleteTransactions(Account account);
 	
-	public CallResult getDistinctValues(Account account, String field, boolean newTransactions, boolean depositsOnly, boolean withdrawalsOnly);
+	public CallResult getDistinctValues(Account account, String field, TransactionDate startDate, boolean depositsOnly, boolean withdrawalsOnly);
 	
 }

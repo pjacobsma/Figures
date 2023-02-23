@@ -19,40 +19,56 @@
  */
 package org.bluewindows.figures.javafx;
 
-import org.bluewindows.figures.domain.FilterSet;
+import java.time.LocalDate;
+
+import org.bluewindows.figures.app.Figures;
+import org.bluewindows.figures.domain.Account;
+import org.bluewindows.figures.domain.TransactionDate;
 import org.bluewindows.figures.enums.FilterField;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Separator;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.StringConverter;
 
 public class NewFiltersOptionsPane {
 	
-	public static final int HEIGHT = 300;
+	public static final int HEIGHT = 360;
 	public static final int WIDTH = 280;
 	private boolean canceled = false;
 	private boolean descriptionSelected = true;
+	private Account account;
 	private Pane basePane;
-	private RadioButton newTransactionsButton;
+	private ToggleGroup filterTimeFrameGroup;
+	private DatePicker datePicker;
 	private RadioButton depositsOnlyButton;
 	private RadioButton withdrawalsOnlyButton;
 	private Button okButton;
 	private Button cancelButton;
 	
-	public Pane getNewFiltersOptionsPane(FilterSet filterSet) {
+	public Pane getNewFiltersOptionsPane(Account selectedAccount) {
+		account = selectedAccount;
 		basePane = new Pane();
+		basePane.addEventHandler(MouseEvent.MOUSE_CLICKED, e ->{ basePane.requestFocus();});
 		Platform.runLater(()->setCloseHandler());
 		VBox baseBox = new VBox();
 		basePane.getChildren().add(baseBox);
@@ -69,16 +85,44 @@ public class NewFiltersOptionsPane {
 		VBox.setMargin(scopeBox, new Insets(0,3,3,10));
 		baseBox.getChildren().add(scopeBox);
 		
-		ToggleGroup filterTimeFrameGroup = new ToggleGroup();
-		newTransactionsButton = new RadioButton("New Transactions Only");
+		filterTimeFrameGroup = new ToggleGroup();
+
+		RadioButton newTransactionsButton = new RadioButton("New Transactions Only");
 		newTransactionsButton.setTooltip(new Tooltip("Include only the transactions loaded in the last import"));
 		newTransactionsButton.setSelected(true);
 		newTransactionsButton.setToggleGroup(filterTimeFrameGroup);
+		RadioButtonToggleHandler newTransactionsButtonToggler = new RadioButtonToggleHandler(newTransactionsButton);
+		newTransactionsButton.setOnMousePressed(newTransactionsButtonToggler.getMousePressed());
+		newTransactionsButton.setOnMouseReleased(newTransactionsButtonToggler.getMouseReleased());
 		scopeBox.getChildren().add(newTransactionsButton);
-		RadioButton allTransactions = new RadioButton("All Transactions");
-		allTransactions.setTooltip(new Tooltip("Include every transaction in the data file"));
-		allTransactions.setToggleGroup(filterTimeFrameGroup);
-		scopeBox.getChildren().add(allTransactions);
+		RadioButton allTransactionsButton = new RadioButton("All Transactions");
+		allTransactionsButton.setTooltip(new Tooltip("Include every transaction in the data file"));
+		allTransactionsButton.setToggleGroup(filterTimeFrameGroup);
+		RadioButtonToggleHandler allTransactionsButtonToggler = new RadioButtonToggleHandler(allTransactionsButton);
+		allTransactionsButton.setOnMousePressed(allTransactionsButtonToggler.getMousePressed());
+		allTransactionsButton.setOnMouseReleased(allTransactionsButtonToggler.getMouseReleased());
+		scopeBox.getChildren().add(allTransactionsButton);
+		
+		HBox dateBox = new HBox();
+		scopeBox.getChildren().add(dateBox);
+		
+		Label dateLabel = new Label("Starting With Date: ");
+		dateBox.getChildren().add(dateLabel);
+		datePicker = getDatePicker();
+		datePicker.setValue(account.getLastLoadedDate().value());
+//		datePicker.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
+		datePicker.valueProperty().addListener((ov, oldValue, newValue) -> {
+//        	LocalDate date = datePicker.getConverter().fromString(datePicker.getEditor().getText());
+//        	if (date != null) datePicker.setValue(date);
+			if (datePicker.focusedProperty().getValue()) {
+            	if (allTransactionsButton.isSelected()) allTransactionsButton.setSelected(false);
+            	if (newTransactionsButton.isSelected()) newTransactionsButton.setSelected(false);
+			}
+	    });
+		dateBox.getChildren().add(datePicker);
+		filterTimeFrameGroup.selectedToggleProperty().addListener(getFilterTimeFrameGroupChangeListener());
+		
+		scopeBox.getChildren().add(new Separator());
 		
 		ToggleGroup transactionTypeGroup = new ToggleGroup();
 		depositsOnlyButton = new RadioButton("Deposits Only");
@@ -129,7 +173,7 @@ public class NewFiltersOptionsPane {
 	    });
 		sourceBox.getChildren().add(useMemos);
 
-		if (filterSet.getDefaultColumn().equals(FilterField.DESCRIPTION.toString())) {
+		if (account.getFilterSet().getDefaultColumn().equals(FilterField.DESCRIPTION.toString())) {
 			useDescriptions.setSelected(true);
 			descriptionSelected = true;
 		}else {
@@ -154,6 +198,57 @@ public class NewFiltersOptionsPane {
 		
 		return basePane;
 	}
+	
+	private ChangeListener<Toggle> getFilterTimeFrameGroupChangeListener() {
+		return new ChangeListener<Toggle>() {
+			@Override
+			public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
+		        if (filterTimeFrameGroup.getSelectedToggle() != null) {
+					if (((ToggleButton)filterTimeFrameGroup.getSelectedToggle()).getText().equals("All Transactions")) { 
+						datePicker.setValue(account.getTransactions().get(account.getTransactions().size()-1).getDate().value());
+					}else{
+						datePicker.setValue(account.getLastLoadedDate().value());
+				    }
+		        }
+			}
+		};
+	}
+	
+	private DatePicker getDatePicker() {
+		DatePicker datePicker = new DatePicker();
+		datePicker.setEditable(true);
+		datePicker.getStyleClass().add("datepicker");
+		datePicker.setPrefWidth(110);
+		datePicker.focusedProperty().addListener(new ChangeListener<Boolean>() {
+	        @Override
+	        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+	            if (!newValue){
+	            	LocalDate date = datePicker.getConverter().fromString(datePicker.getEditor().getText());
+	            	if (date != null) datePicker.setValue(date);
+	            }
+	        }
+	    });
+		datePicker.setConverter(new StringConverter<LocalDate>() {
+	            @Override
+	            public String toString(LocalDate date) {
+	                if (date == null) {
+	                    return "" ;
+	                }
+	                return new TransactionDate(date).toString();
+	            }
+
+	            @Override
+	            public LocalDate fromString(String string) {
+	                if (string == null || string.isEmpty()) {
+	                    return null ;
+	                }
+					return LocalDate.parse(string, Figures.dateFormat);
+	            }
+
+	        });
+		return datePicker;
+	}
+
 	
 	protected EventHandler<ActionEvent> getOkButtonHandler() {
 		return new EventHandler<ActionEvent>() {
@@ -190,9 +285,9 @@ public class NewFiltersOptionsPane {
 	public boolean isCanceled() {
 		return canceled;
 	}
-
-	public boolean isNewTransactionsSelected() {
-		return newTransactionsButton.isSelected();
+	
+	public TransactionDate getStartDate() {
+		return new TransactionDate(datePicker.getValue());
 	}
 
 	public boolean isDescriptionsSelected() {

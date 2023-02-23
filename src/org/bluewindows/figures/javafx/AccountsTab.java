@@ -1063,7 +1063,7 @@ public class AccountsTab {
 		        	ServiceFactory.getInstance().getDisplaySvc().setStatusBad(result);
 				}
 				openAccount.setFilterSet((FilterSet)result.getReturnedObject());
-				Scene scene = new Scene(newFiltersOptionsPane.getNewFiltersOptionsPane(openAccount.getFilterSet()), 
+				Scene scene = new Scene(newFiltersOptionsPane.getNewFiltersOptionsPane(openAccount), 
 					NewFiltersOptionsPane.WIDTH, NewFiltersOptionsPane.HEIGHT);
 				scene.getStylesheets().add(DisplayServiceImplJavaFX.getCss());
 				Stage stage = new Stage();
@@ -1073,7 +1073,7 @@ public class AccountsTab {
 				stage.getIcons().add(DisplayServiceImplJavaFX.appIcon);
 				stage.setOnHidden((WindowEvent event1) -> {
 			        if (!newFiltersOptionsPane.isCanceled()) {
-			        	defineNewFilters(newFiltersOptionsPane.isDescriptionsSelected(), newFiltersOptionsPane.isNewTransactionsSelected(),
+			        	defineNewFilters(newFiltersOptionsPane.isDescriptionsSelected(), newFiltersOptionsPane.getStartDate(),
 			        			newFiltersOptionsPane.isDepositsOnlySelected(), newFiltersOptionsPane.isWithdrawalsOnlySelected());
 			        }
 			    });
@@ -1507,12 +1507,12 @@ public class AccountsTab {
 		return new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent arg0) {
-				applyFilters(false);
+				applyFilters(openAccount.getTransactions().get(openAccount.getTransactions().size()-1).getDate());
 			}
 		};
 	}
 	
-	private void applyFilters(boolean newTransactionsFiltered) {
+	private void applyFilters(TransactionDate startDate) {
 		ServiceFactory.getInstance().getDisplaySvc().clearStatus();
 		if (openAccount.getFilterSet().getID() == 0) {
         	ServiceFactory.getInstance().getDisplaySvc().setStatusBad("No filter set has been selected for this account.  Use the Account Settings button to select a filter set.");
@@ -1527,7 +1527,7 @@ public class AccountsTab {
         	ServiceFactory.getInstance().getDisplaySvc().setStatusBad("No filters have been defined for the filter set associated with this account.  Use the Make New Filters button to create filters.");
         	return;
 		}
-		Task<CallResult> task = getFilterTask(openAccount, newTransactionsFiltered);
+		Task<CallResult> task = getFilterTask(openAccount, startDate);
 		task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@Override
 		    public void handle(WorkerStateEvent t) {
@@ -1560,12 +1560,12 @@ public class AccountsTab {
 		new Thread(task).start();
 	}
 
-	private Task<CallResult> getFilterTask(Account account, boolean newTransactionsFiltered){
+	private Task<CallResult> getFilterTask(Account account, TransactionDate startDate){
 		return new Task<CallResult>() {
 			@Override protected CallResult call() throws Exception {
 				CallResult filterResult = ServiceFactory.getInstance().getMaintenanceSvc().filterAndUpdateTransactions(account);
 				ServiceFactory.getInstance().getDisplaySvc().setCursor(CursorType.WAIT);
-				if (newTransactionsFiltered) {
+				if (startDate.equals(account.getLastLoadedDate())) {
 					if (filterResult.isGood()) {
 						account.setLastFilteredDate(account.getLastLoadedDate());
 						CallResult result = ServiceFactory.getInstance().getPersistenceSvc().updateAccount(account);
@@ -1577,7 +1577,7 @@ public class AccountsTab {
 		};
 	}
 	
-	private void defineNewFilters(boolean useDescription, boolean newTransactionsSelected, boolean depositsOnlySelected, boolean withdrawalsOnlySelected) {
+	private void defineNewFilters(boolean useDescription, TransactionDate startDate, boolean depositsOnlySelected, boolean withdrawalsOnlySelected) {
 		Account accountSelected = (Account) accountCombo.getSelectionModel().getSelectedItem();
 		FilterField field = null;
 		if (useDescription) {
@@ -1586,7 +1586,7 @@ public class AccountsTab {
 			field = FilterField.MEMO;
 		}
 		CallResult result = ServiceFactory.getInstance().getPersistenceSvc().getDistinctValues(accountSelected, field.name(), 
-			newTransactionsSelected, depositsOnlySelected, withdrawalsOnlySelected);
+			startDate, depositsOnlySelected, withdrawalsOnlySelected);
 		if (result.isBad()) {
     		ServiceFactory.getInstance().getDisplaySvc().displayErrorMessage("Error Loading " + field.name() + "s", result.getErrorMessage());
 			return;
@@ -1612,7 +1612,7 @@ public class AccountsTab {
 		stage.setOnHidden((WindowEvent event1) -> {
 			stage.close();
         	if (newFiltersPane.isDataChanged()) {
-        		applyFilters(true);
+        		applyFilters(startDate);
         	}
 	    });
 		stage.setOnCloseRequest(event2 -> {

@@ -192,19 +192,17 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 
 	// Find distinct values of description or memo fields as potential filter targets.
 	// Include only uncategorized transactions
-	// Optionally include only transactions in most recent load
+	// Include only transactions from the startDate forward
 	// Optionally include only deposits or withdrawals
 	@Override
-	public CallResult getDistinctValues(Account account, String field, boolean newTransactions, boolean depositsOnly, boolean withdrawalsOnly) {
+	public CallResult getDistinctValues(Account account, String field, TransactionDate startDate, boolean depositsOnly, boolean withdrawalsOnly) {
 		String whereClause = "Where t." + ACCOUNT_ID + " = " + account.getID() + " " +
 			"And tc." + CATEGORY_ID + " = 0 ";
 		// Exclude checks for checking accounts
 		if (account.getType().equals(AccountType.CHECKING)){
 			whereClause = whereClause + "And t." + NUMBER + " = '' ";
 		}
-		if (newTransactions) {
-			whereClause = whereClause + "And " + DATE + " >= '" + account.getLastLoadedDate().value().format(JDBC_DATE_FORMAT) + "' ";
-		}
+		whereClause = whereClause + "And " + DATE + " >= '" + startDate.value().format(JDBC_DATE_FORMAT) + "' ";
 		if (depositsOnly) {
 			whereClause = whereClause + "And " + AMOUNT + " > 0 ";
 		}

@@ -461,8 +461,8 @@ public class PersistenceServiceImpl implements PersistenceService {
 	}
 
 	@Override
-	public CallResult getDistinctValues(Account account, String field, boolean newTransactions, boolean depositsOnly, boolean withdrawalsOnly) {
-		return transactionDao.getDistinctValues(account, field, newTransactions, depositsOnly, withdrawalsOnly);
+	public CallResult getDistinctValues(Account account, String field, TransactionDate startDate, boolean depositsOnly, boolean withdrawalsOnly) {
+		return transactionDao.getDistinctValues(account, field, startDate, depositsOnly, withdrawalsOnly);
 	}
 	
 	public PersistenceAdminDao getPersistenceAdminDao() {

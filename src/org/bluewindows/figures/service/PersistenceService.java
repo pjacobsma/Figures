@@ -37,6 +37,7 @@ import org.bluewindows.figures.domain.Category;
 import org.bluewindows.figures.domain.FilterSet;
 import org.bluewindows.figures.domain.SummaryReport;
 import org.bluewindows.figures.domain.Transaction;
+import org.bluewindows.figures.domain.TransactionDate;
 import org.bluewindows.figures.filter.Filter;
 
 public interface PersistenceService {
@@ -96,7 +97,7 @@ public interface PersistenceService {
 	public CallResult updateTransaction(Transaction transaction);
 	public CallResult updateTransactions(List<Transaction> transactions);
 	public CallResult deleteTransactions(Account account);
-	public CallResult getDistinctValues(Account account, String field, boolean newTransactions, boolean depositsOnly, boolean withdrawalsOnly);
+	public CallResult getDistinctValues(Account account, String field, TransactionDate startDate, boolean depositsOnly, boolean withdrawalsOnly);
 	
 	public CallResult getReports();
 	public CallResult saveReport(SummaryReport report);

@@ -222,14 +222,14 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 		transactionList.add(transaction6);
 		result = transactionDao.addTransactions(transactionList, account);
 		assertTrue(result.isGood());
-		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, true, false, false);
+		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, transaction1.getDate(), false, false);
 		assertTrue(result.isGood());
 		@SuppressWarnings("unchecked")
 		List<String> returnedDescStrings1 = (List<String>)result.getReturnedObject();
 		assertEquals(2, returnedDescStrings1.size());
 		assertEquals("Description 1", returnedDescStrings1.get(0));
 		assertEquals("Description 6", returnedDescStrings1.get(1));
-		result = transactionDao.getDistinctValues(account, Persistence.MEMO, true, false, false);
+		result = transactionDao.getDistinctValues(account, Persistence.MEMO, transaction1.getDate(), false, false);
 		assertTrue(result.isGood());
 		@SuppressWarnings("unchecked")
 		List<String> returnedMemoStrings1 = (List<String>)result.getReturnedObject();
@@ -238,7 +238,7 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 		assertEquals("Memo 6", returnedMemoStrings1.get(1));
 		
 		// Now included the older transaction (transaction4)
-		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, false, false, false);
+		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, transaction4.getDate(), false, false);
 		assertTrue(result.isGood());
 		@SuppressWarnings("unchecked")
 		List<String> returnedDescStrings2 = (List<String>)result.getReturnedObject();
@@ -246,7 +246,7 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 		assertEquals("Description 1", returnedDescStrings2.get(0));
 		assertEquals("Description 4", returnedDescStrings2.get(1));
 		assertEquals("Description 6", returnedDescStrings2.get(2));
-		result = transactionDao.getDistinctValues(account, Persistence.MEMO, false, false, false);
+		result = transactionDao.getDistinctValues(account, Persistence.MEMO, transaction4.getDate(), false, false);
 		assertTrue(result.isGood());
 		@SuppressWarnings("unchecked")
 		List<String> returnedMemoStrings2 = (List<String>)result.getReturnedObject();
@@ -256,7 +256,7 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 		assertEquals("Memo 6", returnedMemoStrings2.get(2));
 		
 		// Deposits only
-		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, true, true, false);
+		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, transaction1.getDate(), true, false);
 		assertTrue(result.isGood());
 		@SuppressWarnings("unchecked")
 		List<String> returnedDescStrings3 = (List<String>)result.getReturnedObject();
@@ -264,7 +264,7 @@ public class TransactionDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase 
 		assertEquals("Description 6", returnedDescStrings3.get(0));
 		
 		// Withdrawals only
-		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, true, false, true);
+		result = transactionDao.getDistinctValues(account, Persistence.DESCRIPTION, transaction1.getDate(), false, true);
 		assertTrue(result.isGood());
 		@SuppressWarnings("unchecked")
 		List<String> returnedDescStrings4 = (List<String>)result.getReturnedObject();
