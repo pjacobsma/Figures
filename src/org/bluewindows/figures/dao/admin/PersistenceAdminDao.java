@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package org.bluewindows.figures.dao;
+package org.bluewindows.figures.dao.admin;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +29,9 @@ public interface PersistenceAdminDao {
 	
 	public boolean isPersistenceValid(File file)  throws IOException;
 	public CallResult openExisting(String fileName, String password);
+	public CallResult getPersistenceVersion();
+	public CallResult applyUpdates(Integer fromVersion, Integer toVersion);
+	public CallResult savePersistenceVersion(Integer version);
 	public CallResult openNew(String fileName, String password);
 	public CallResult close();
 	public CallResult startTransaction();

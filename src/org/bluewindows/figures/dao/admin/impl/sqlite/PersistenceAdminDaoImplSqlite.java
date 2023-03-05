@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package org.bluewindows.figures.dao.impl.sqlite;
+package org.bluewindows.figures.dao.admin.impl.sqlite;
 
 import static org.bluewindows.figures.domain.persistence.Persistence.ACCOUNT_ID;
 import static org.bluewindows.figures.domain.persistence.Persistence.ACCOUNT_STORE_NAME;
@@ -46,8 +46,8 @@ import static org.bluewindows.figures.domain.persistence.Persistence.FILTER_STOR
 import static org.bluewindows.figures.domain.persistence.Persistence.ID;
 import static org.bluewindows.figures.domain.persistence.Persistence.IMPORT_FOLDER;
 import static org.bluewindows.figures.domain.persistence.Persistence.INITIAL_BALANCE;
-import static org.bluewindows.figures.domain.persistence.Persistence.LAST_LOAD_DATE;
 import static org.bluewindows.figures.domain.persistence.Persistence.LAST_FILTER_DATE;
+import static org.bluewindows.figures.domain.persistence.Persistence.LAST_LOAD_DATE;
 import static org.bluewindows.figures.domain.persistence.Persistence.MEMO;
 import static org.bluewindows.figures.domain.persistence.Persistence.NAME;
 import static org.bluewindows.figures.domain.persistence.Persistence.NUMBER;
@@ -73,6 +73,8 @@ import static org.bluewindows.figures.domain.persistence.Persistence.USER_CHANGE
 import static org.bluewindows.figures.domain.persistence.Persistence.USER_CHANGED_DESC;
 import static org.bluewindows.figures.domain.persistence.Persistence.USER_CHANGED_MEMO;
 import static org.bluewindows.figures.domain.persistence.Persistence.VALUE;
+import static org.bluewindows.figures.domain.persistence.Persistence.VERSION;
+import static org.bluewindows.figures.domain.persistence.Persistence.VERSION_STORE_NAME;
 
 import java.io.File;
 import java.io.FileReader;
@@ -81,16 +83,25 @@ import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bluewindows.figures.app.Figures;
-import org.bluewindows.figures.dao.PersistenceAdminDao;
+import org.bluewindows.figures.dao.admin.PersistenceAdminDao;
+import org.bluewindows.figures.dao.admin.PersistenceUpdateDao;
 import org.bluewindows.figures.domain.CallResult;
+import org.bluewindows.figures.domain.DateRange;
+import org.bluewindows.figures.domain.TransactionDate;
+import org.bluewindows.figures.domain.persistence.Persistence;
 
-public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
+public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao  {
 	
 	private static Connection connection;
 	private static final String SQLITE_CLASS_NAME = "org.sqlite.JDBC";
@@ -155,9 +166,56 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 	}
 	
 	@Override
+	public CallResult getPersistenceVersion() {
+		CallResult result = executeQueryStatement("Select * From " + VERSION_STORE_NAME);
+		if (result.isBad()) return result;
+		ResultSet resultSet = (ResultSet)result.getReturnedObject();
+		result = mapInteger(resultSet, VERSION);
+		closeResultSet(resultSet);
+		return result;
+	}
+
+	@Override
+	public CallResult applyUpdates(Integer fromVersion, Integer toVersion) {
+		CallResult result = new CallResult();
+		List<PersistenceUpdateDao> updates = getPersistenceUpdates();
+		for (int i = fromVersion.intValue(); i <= toVersion.intValue(); i++) {
+			for (Iterator<PersistenceUpdateDao> iterator = updates.iterator(); iterator.hasNext();) {
+				PersistenceUpdateDao persistenceUpdateDao = (PersistenceUpdateDao) iterator.next();
+				if (persistenceUpdateDao.getVersion() == i) {
+					result = persistenceUpdateDao.update();
+					if (result.isBad()) return result;
+				}
+			}
+		}
+		return result;
+	}
+	
+	@Override
+	public CallResult savePersistenceVersion(Integer version) {
+		CallResult result = new CallResult();
+		executeUpdateStatement("DELETE FROM " + VERSION_STORE_NAME + " " +
+			"where " + VERSION + " != '" + version + "' ");
+		try {
+			PreparedStatement pStmt = prepareStatement("INSERT INTO " + VERSION_STORE_NAME + 
+					" (" + VERSION + ") VALUES(?)");
+			pStmt.setInt(1, version);
+			pStmt.executeUpdate();
+			pStmt.close();
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+			return result.setCallBad("Version Update Failed", e.getLocalizedMessage());
+		}
+		return result;
+	}
+	
+	@Override
 	public CallResult openNew(String fileName, String password) {
 		CallResult result = getConnection(fileName, password);
 		if (result.isBad()) return result;
+		result = executeDefinitions(getVersionTableDefs());
+		if (result.isBad()) return result;
+		result = savePersistenceVersion(Figures.DATABASE_VERSION);
 		result = executeDefinitions(getAccountTableDefs());
 		if (result.isBad()) return result;
 		result = executeDefinitions(getCategoryTableDefs());
@@ -261,34 +319,6 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return connection;
 	}
 	
-	private CallResult executeDefinitions(LinkedList<String> definitions){
-		CallResult result = checkConnection();
-		if (result.isBad()) return result;
-		for (Iterator<String> defs = definitions.iterator(); defs.hasNext();) {
-			String definition = (String) defs.next();
-			result = executeUpdateStatement(definition);
-			if (result.isBad()) return result;
-		}
-		return result;
-	}
-
-	private CallResult executeUpdateStatement(String sql){
-		CallResult result = new CallResult();
-		try {
-			Statement stmt = getConnection().createStatement();
-			int stmtResult = stmt.executeUpdate(sql);
-			result.setReturnedObject(Integer.valueOf(stmtResult));
-			stmt.close();
-		} catch (SQLException e) {
-			Figures.logStackTrace(e);
-			String message = this.getClass().getSimpleName();
-			message = message + ", " + e.getLocalizedMessage();
-			Exception exception = new Exception(message);
-			return result.setCallBad("Update Failure", exception.getMessage());
-		}
-		return result;
-	}
-
 	@Override
 	public CallResult optimize() {
 		CallResult result = checkConnection();
@@ -304,7 +334,16 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return result;
 	}
 
-	public LinkedList<String> getAccountTableDefs(){
+	private LinkedList<String> getVersionTableDefs(){
+		LinkedList<String> defs = new LinkedList<String>();
+		StringBuilder sb = new StringBuilder();
+		sb.append("CREATE TABLE ").append(VERSION_STORE_NAME).append(" (");
+		sb.append(VERSION).append(" INTEGER) ");
+		defs.add(sb.toString());
+		return defs;
+	}
+	
+	private LinkedList<String> getAccountTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(ACCOUNT_STORE_NAME).append(" (");
@@ -324,7 +363,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 	
-	public LinkedList<String> getCategoryTableDefs(){
+	private LinkedList<String> getCategoryTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(CATEGORY_STORE_NAME).append(" (");
@@ -338,7 +377,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 	
-	public LinkedList<String> getTransactionTableDefs(){
+	private LinkedList<String> getTransactionTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(TRANSACTION_STORE_NAME).append(" (");
@@ -367,7 +406,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 	
-	public LinkedList<String> getTransactionCategoryTableDefs(){
+	private LinkedList<String> getTransactionCategoryTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(TRANSACTION_CATEGORY_STORE_NAME).append(" (");
@@ -384,7 +423,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 	
-	public LinkedList<String> getFilterTableDefs(){
+	private LinkedList<String> getFilterTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb = new StringBuilder();
@@ -407,7 +446,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 
-	public LinkedList<String> getFilterSetTableDefs(){
+	private LinkedList<String> getFilterSetTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb = new StringBuilder();
@@ -422,7 +461,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 	}
 
 	
-	public LinkedList<String> getSummaryTableDefs(){
+	private LinkedList<String> getSummaryTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(SUMMARY_STORE_NAME).append(" (");
@@ -440,7 +479,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 
-	public LinkedList<String> getSummaryAccountTableDefs(){
+	private LinkedList<String> getSummaryAccountTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(SUMMARY_ACCOUNT_STORE_NAME).append(" (");
@@ -455,7 +494,7 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 	
-	public LinkedList<String> getSummaryCategoryTableDefs(){
+	private LinkedList<String> getSummaryCategoryTableDefs(){
 		LinkedList<String> defs = new LinkedList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("CREATE TABLE ").append(SUMMARY_CATEGORY_STORE_NAME).append(" (");
@@ -470,4 +509,140 @@ public class PersistenceAdminDaoImplSqlite implements PersistenceAdminDao {
 		return defs;
 	}
 	
+	protected void closeResultSet(ResultSet resultSet) {
+		try {
+			resultSet.getStatement().close();
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+		}
+	}
+	
+	public CallResult executeDefinitions(LinkedList<String> definitions){
+		CallResult result = checkConnection();
+		if (result.isBad()) return result;
+		for (Iterator<String> defs = definitions.iterator(); defs.hasNext();) {
+			String definition = (String) defs.next();
+			result = executeUpdateStatement(definition);
+			if (result.isBad()) return result;
+		}
+		return result;
+	}
+	
+	public CallResult executeQueryStatement(String sql){
+		CallResult result = checkConnection();
+		if (result.isBad()) return result;
+		ResultSet rs;
+		try {
+			Statement stmt = getConnection().createStatement();
+			rs = stmt.executeQuery(sql);
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+			return result.setCallBad("Query Failure", e.getLocalizedMessage());
+		}
+		return result.setReturnedObject(rs);
+	}
+
+	public CallResult executeUpdateStatement(String sql){
+		CallResult result = checkConnection();
+		if (result.isBad()) return result;
+		try {
+			Statement stmt = getConnection().createStatement();
+			int stmtResult = stmt.executeUpdate(sql);
+			result.setReturnedObject(Integer.valueOf(stmtResult));
+			stmt.close();
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+			String message = this.getClass().getSimpleName();
+			message = message + ", " + e.getLocalizedMessage();
+			result.setCallBad("Update Failure", e.getLocalizedMessage());
+		}
+		return result;
+	}
+
+	public PreparedStatement prepareStatement(String sql) throws SQLException{
+		CallResult result = checkConnection();
+		if (result.isBad()) throw new SQLException("Unable to connect to the database.");
+		PreparedStatement pStmt = getConnection().prepareStatement(sql);
+		return pStmt;
+	}
+	
+	public CallResult mapInteger(ResultSet rs, String fieldName) {
+		CallResult result = new CallResult();
+		try {
+			if (rs.next()) {
+				result.setReturnedObject(Integer.valueOf(rs.getInt(fieldName)));
+			}
+			rs.close();
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+			result.setCallBad("Integer Map Failure", e.getLocalizedMessage());
+		}
+		return result;
+	}
+	
+	public CallResult mapDate(ResultSet rs, String fieldName) {
+		CallResult result = new CallResult();
+		String dateString = null;
+		try {
+			dateString = rs.getString(fieldName);
+			if (dateString != null) dateString = StringUtils.remove(dateString, '-');
+		} catch (SQLException se) {
+			Figures.logStackTrace(se);
+			result.setCallBad("Date Map Failure", se.getLocalizedMessage());
+		}
+		try {
+			if (dateString == null) {
+				result.setReturnedObject(null);
+			}else {
+				result.setReturnedObject(new TransactionDate(dateString));
+			}
+		} catch (ParseException pe) {
+			Figures.logStackTrace(pe);
+			result.setCallBad("Date Map Failure for " + dateString, pe.getLocalizedMessage());
+		} catch (IllegalArgumentException iae) {
+			Figures.logStackTrace(iae);
+			result.setCallBad("Date Map Failure for " + dateString, iae.getLocalizedMessage());
+		}
+		return result;
+	}
+	
+	public CallResult mapDateRange(ResultSet rs) {
+		CallResult result = new CallResult();
+		DateRange dateRange = new DateRange();
+		int rowNumber = 0;
+		try {
+			if (rs.next()) {
+				rowNumber++;
+				result = mapDate(rs, Persistence.START_DATE);
+				if (result.isBad()) return decorateResult(result, rowNumber);
+				dateRange.setStartDate((TransactionDate)result.getReturnedObject());
+				result = mapDate(rs, Persistence.END_DATE);
+				if (result.isBad()) return decorateResult(result, rowNumber);
+				dateRange.setEndDate((TransactionDate)result.getReturnedObject());
+				result.setReturnedObject(dateRange);
+			}
+			rs.close();
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+			result.setCallBad("Map Date Range Failure", e.getLocalizedMessage());
+		}
+		return result;
+	}
+	
+	protected CallResult decorateResult(CallResult result, int rowNumber){
+		result.setMessageDecorator("  Occured at transaction number: " + rowNumber);
+		return result;
+	}
+
+	protected CallResult decorateResult(CallResult result){
+		result.setMessageDecorator("  Occured in " + this.getClass().getName());
+		return result;
+	}
+	
+	private List<PersistenceUpdateDao> getPersistenceUpdates(){
+		List<PersistenceUpdateDao> daos = new ArrayList<PersistenceUpdateDao>();
+		daos.add(new PersistenceUpdateSqliteVersion2());
+		return daos;
+	}
+
 }

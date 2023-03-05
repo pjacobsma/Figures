@@ -1,10 +1,10 @@
 package org.bluewindows.figures.service;
 
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.AccountDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.CategoryDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.FilterDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.FilterSetDaoImplSqlite;
-import org.bluewindows.figures.dao.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.SummaryDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.TransactionDaoImplSqlite;
 import org.bluewindows.figures.service.impl.PersistenceServiceImpl;

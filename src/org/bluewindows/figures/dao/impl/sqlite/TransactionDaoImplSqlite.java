@@ -54,6 +54,7 @@ import java.util.List;
 
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.TransactionDao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.Money;
@@ -72,12 +73,12 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 
 	@Override
 	public CallResult getTransactionDateRange(Account account) {
-		CallResult result = executeQueryStatement("Select Min(" + DATE + ") as " + START_DATE + 
+		CallResult result = persistenceAdmin.executeQueryStatement("Select Min(" + DATE + ") as " + START_DATE + 
 			", Max(" + DATE + ") as " + END_DATE + " From " + TRANSACTION_STORE_NAME + " " +
 			"Where " + ACCOUNT_ID + " = " + account.getID()); 
 		if (result.isGood()) {
 			ResultSet resultSet = (ResultSet) result.getReturnedObject();
-			result =  mapDateRange(resultSet);
+			result =  persistenceAdmin.mapDateRange(resultSet);
 			closeResultSet(resultSet);
 		}
 		return result;
@@ -86,7 +87,7 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 	@Override
 	public CallResult getTransactions(Account account) {
 		String query = buildTransactionQuery(account);
-		CallResult result = executeQueryStatement(query);
+		CallResult result = persistenceAdmin.executeQueryStatement(query);
 		if (result.isBad()){
 			return result;
 		}
@@ -109,7 +110,7 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 					categories = new ArrayList<TransactionCategory>();
 					transaction.setID(resultSet.getInt(ID));
 					transaction.setNumber(resultSet.getString(NUMBER));
-					result = mapDate(resultSet, DATE);
+					result = persistenceAdmin.mapDate(resultSet, DATE);
 					if (result.isBad()) return result;
 					transaction.setDate((TransactionDate)result.getReturnedObject());
 					transaction.setDescription(resultSet.getString(DESCRIPTION));
@@ -164,14 +165,14 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 			return result.setCallBad("Transaction Insert Failure", "No transactions to insert.");
 		}
 		try {
-			PreparedStatement transactionInsertStatement = prepareStatement(getTransactionInsertStatement());
-			PreparedStatement categoryInsertStatement = prepareStatement(getCategoryInsertStatement());
+			PreparedStatement transactionInsertStatement = persistenceAdmin.prepareStatement(getTransactionInsertStatement());
+			PreparedStatement categoryInsertStatement = persistenceAdmin.prepareStatement(getCategoryInsertStatement());
 			if (result.isBad()) return result;
 			for (Transaction transaction : transactions) {
 				setTransactionParameters(transactionInsertStatement, account, transaction);
 				transactionInsertStatement.executeUpdate();
 				// Get the transaction ID so we can use it on the TransactionCategory table
-				CallResult rowIdResult = executeQueryStatement("select seq from sqlite_sequence where name = '" + TRANSACTION_STORE_NAME + "'");
+				CallResult rowIdResult = persistenceAdmin.executeQueryStatement("select seq from sqlite_sequence where name = '" + TRANSACTION_STORE_NAME + "'");
 				if (rowIdResult.isBad()) return rowIdResult;
 				ResultSet resultSet = (ResultSet)rowIdResult.getReturnedObject();
 				transaction.setID(resultSet.getInt(1));
@@ -209,7 +210,7 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 		if (withdrawalsOnly) {
 			whereClause = whereClause + "And " + AMOUNT + " < 0 ";
 		}
-		CallResult result = executeQueryStatement("Select Distinct " + field + " " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select Distinct " + field + " " +
  			"From " + TRANSACTION_STORE_NAME + " t Left Outer Join " + TRANSACTION_CATEGORY_STORE_NAME + " tc " +
 			"On t." + ID + " = tc." + TRANSACTION_ID + " " +
 			whereClause + " Order by 1 ");
@@ -234,13 +235,13 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 	public CallResult updateTransaction(Transaction transaction) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement transactionUpdateStmt = prepareStatement(getTransactionUpdateStatement());
+			PreparedStatement transactionUpdateStmt = persistenceAdmin.prepareStatement(getTransactionUpdateStatement());
 			setTransactionUpdateParameters(transactionUpdateStmt, transaction);
 			transactionUpdateStmt.executeUpdate();
-			PreparedStatement categoryInsertStmt = prepareStatement(getCategoryInsertStatement());
+			PreparedStatement categoryInsertStmt = persistenceAdmin.prepareStatement(getCategoryInsertStatement());
 			if (transaction.isCategoryUpdated()) {
 				for (TransactionCategory category : transaction.getDeletedCategories()) {
-					result = executeUpdateStatement("Delete from " + TRANSACTION_CATEGORY_STORE_NAME + " " +
+					result = persistenceAdmin.executeUpdateStatement("Delete from " + TRANSACTION_CATEGORY_STORE_NAME + " " +
 						"Where " + TRANSACTION_CATEGORY_ID + " = " + category.getTransactionCategoryID());
 					if (result.isBad()) {
 						return result;
@@ -265,9 +266,9 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 		CallResult result = new CallResult();
 		int updateCount = 0;
 		try {
-			PreparedStatement transactionUpdateStmt = prepareStatement(getTransactionUpdateStatement());
-			PreparedStatement categoryInsertStmt = prepareStatement(getCategoryInsertStatement());
-			PreparedStatement categoryDeleteStmt = prepareStatement(getCategoryDeleteStatement());
+			PreparedStatement transactionUpdateStmt = persistenceAdmin.prepareStatement(getTransactionUpdateStatement());
+			PreparedStatement categoryInsertStmt = persistenceAdmin.prepareStatement(getCategoryInsertStatement());
+			PreparedStatement categoryDeleteStmt = persistenceAdmin.prepareStatement(getCategoryDeleteStatement());
 			int tranCount = 0;
 			while (tranCount < transactions.size()){
 				int batchCount = 0;
@@ -304,8 +305,8 @@ public class TransactionDaoImplSqlite extends AbstractDaoImplSqlite implements T
 	public CallResult deleteTransactions(Account account) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement transactionDeleteStmt = prepareStatement(getAccountTransactionDeleteStatement());
-			PreparedStatement categoryDeleteStmt = prepareStatement(getCategoryDeleteStatement());
+			PreparedStatement transactionDeleteStmt = persistenceAdmin.prepareStatement(getAccountTransactionDeleteStatement());
+			PreparedStatement categoryDeleteStmt = persistenceAdmin.prepareStatement(getCategoryDeleteStatement());
 			for (Transaction transaction : account.getTransactions()) {
 				for (TransactionCategory transactionCategory : transaction.getCategories()) {
 					setCategoryDeleteParameters(categoryDeleteStmt, transactionCategory);

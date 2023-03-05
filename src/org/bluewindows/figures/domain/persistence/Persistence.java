@@ -22,6 +22,7 @@ package org.bluewindows.figures.domain.persistence;
 
 public abstract class Persistence {
 
+	public static final String VERSION_STORE_NAME = "DatabaseVersion";
 	public static final String ACCOUNT_STORE_NAME = "Accounts";
 	public static final String CATEGORY_STORE_NAME = "Categories";
 	public static final String TRANSACTION_STORE_NAME = "Transactions";
@@ -31,6 +32,7 @@ public abstract class Persistence {
 	public static final String SUMMARY_STORE_NAME = "Summary";
 	public static final String SUMMARY_ACCOUNT_STORE_NAME = "SummaryAccount";
 	public static final String SUMMARY_CATEGORY_STORE_NAME = "SummaryCategory";
+	public static final String VERSION = "VERSION";
 	public static final String ID = "ID";
 	public static final String ACCOUNT_ID = "AccountID";
 	public static final String CATEGORY_ID = "CategoryID";

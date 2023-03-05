@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.Mapper;
 import org.bluewindows.figures.dao.SummaryDao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.Category;
@@ -56,7 +57,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 
 	@Override
 	public CallResult getReports() {
-		CallResult result = executeQueryStatement("Select * From " + SUMMARY_STORE_NAME + " " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + SUMMARY_STORE_NAME + " " +
 		    "ORDER BY " + NAME);
 		ResultSet resultSet = (ResultSet)result.getReturnedObject();
 		if (result.isBad()) return result;
@@ -80,11 +81,11 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 				report.setCategorizedOnly(rs.getBoolean(CATEGORIZED_ONLY));
 				report.setDeductibleInclusion(DeductibleInclusion.valueOf(rs.getString(DEDUCTIBLE_INCLUSION)));
 				report.setCheckInclusion(CheckInclusion.valueOf(rs.getString(CHECK_INCLUSION)));
-				result = mapDate(rs, START_DATE);
+				result = persistenceAdmin.mapDate(rs, START_DATE);
 				if (result.isBad()) return result;
 				report.setDateRange(new DateRange());
 				report.getDateRange().setStartDate((TransactionDate)result.getReturnedObject());
-				result = mapDate(rs, END_DATE);
+				result = persistenceAdmin.mapDate(rs, END_DATE);
 				if (result.isBad()) return result;
 				report.getDateRange().setEndDate((TransactionDate)result.getReturnedObject());
 				result = mapReportAccounts(report.getID());
@@ -103,7 +104,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	}
 
 	private CallResult mapReportAccounts(int reportID) {
-		CallResult result = executeQueryStatement("Select " + ACCOUNT_ID + " From " + SUMMARY_ACCOUNT_STORE_NAME + " " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select " + ACCOUNT_ID + " From " + SUMMARY_ACCOUNT_STORE_NAME + " " +
 			"Where " + SUMMARY_ID + " = " + reportID);
 		if (result.isBad()) return result;
 		ResultSet rs = (ResultSet)result.getReturnedObject();
@@ -123,7 +124,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	}
 
 	private CallResult mapReportCategories(int reportID) {
-		CallResult result = executeQueryStatement("Select sc." + CATEGORY_ID + ", c." + NAME + " From " + SUMMARY_CATEGORY_STORE_NAME + " sc " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select sc." + CATEGORY_ID + ", c." + NAME + " From " + SUMMARY_CATEGORY_STORE_NAME + " sc " +
 			"Join " + CATEGORY_STORE_NAME + " c " +
 			"On sc." + CATEGORY_ID + " = c." + ID + " " +
 			"Where sc." + SUMMARY_ID + " = " + reportID);
@@ -147,7 +148,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	public CallResult saveReport(SummaryReport report) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement summaryStmt = prepareStatement("INSERT INTO " + SUMMARY_STORE_NAME + 
+			PreparedStatement summaryStmt = persistenceAdmin.prepareStatement("INSERT INTO " + SUMMARY_STORE_NAME + 
 				" (" + NAME + ", " + SUMMARY_FIELDS + ", " + TRANSACTION_INCLUSION + ", " + CATEGORY_INCLUSION + ", " + CATEGORIZED_ONLY + 
 				", " + DEDUCTIBLE_INCLUSION + ", " + CHECK_INCLUSION +
 				", " + START_DATE + ", " + END_DATE + ") VALUES(?,?,?,?,?,?,?,?,?)");
@@ -168,7 +169,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 			summaryStmt.executeUpdate();
 			summaryStmt.close();
 			// Get the report ID so we can use it on the Account and Category tables
-			CallResult rowIdResult = executeQueryStatement("select seq from sqlite_sequence where name = '" + SUMMARY_STORE_NAME + "'");
+			CallResult rowIdResult = persistenceAdmin.executeQueryStatement("select seq from sqlite_sequence where name = '" + SUMMARY_STORE_NAME + "'");
 			if (rowIdResult.isBad()) return rowIdResult;
 			ResultSet rs = (ResultSet)rowIdResult.getReturnedObject();
 			report.setID(rs.getInt(1));
@@ -192,7 +193,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	public CallResult updateReport(SummaryReport report) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement summaryStmt = prepareStatement("Update " + SUMMARY_STORE_NAME + " " +
+			PreparedStatement summaryStmt = persistenceAdmin.prepareStatement("Update " + SUMMARY_STORE_NAME + " " +
 				"Set " + NAME + " = ?" + 
 				", "   + SUMMARY_FIELDS + " = ?" +
 				", "   + TRANSACTION_INCLUSION + " = ?" +
@@ -243,13 +244,13 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	public CallResult deleteReport(SummaryReport report) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement accountStmt = prepareStatement("Delete From " + SUMMARY_ACCOUNT_STORE_NAME + " " + " Where " + SUMMARY_ID + " = ?");
+			PreparedStatement accountStmt = persistenceAdmin.prepareStatement("Delete From " + SUMMARY_ACCOUNT_STORE_NAME + " " + " Where " + SUMMARY_ID + " = ?");
 			accountStmt.setInt(1, report.getID());
 			accountStmt.executeUpdate();
-			PreparedStatement categoryStmt = prepareStatement("Delete From " + SUMMARY_CATEGORY_STORE_NAME + " " + " Where " + SUMMARY_ID + " = ?");
+			PreparedStatement categoryStmt = persistenceAdmin.prepareStatement("Delete From " + SUMMARY_CATEGORY_STORE_NAME + " " + " Where " + SUMMARY_ID + " = ?");
 			categoryStmt.setInt(1, report.getID());
 			categoryStmt.executeUpdate();
-			PreparedStatement summaryStmt = prepareStatement("Delete From " + SUMMARY_STORE_NAME + " " + " Where " + ID + " = ?");
+			PreparedStatement summaryStmt = persistenceAdmin.prepareStatement("Delete From " + SUMMARY_STORE_NAME + " " + " Where " + ID + " = ?");
 			summaryStmt.setInt(1, report.getID());
 			summaryStmt.executeUpdate();
 			accountStmt.close(); 
@@ -264,7 +265,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 
 	private CallResult saveAccounts(SummaryReport report, List<Account> accounts) throws SQLException {
 		CallResult result = new CallResult();
-		PreparedStatement pStmt = prepareStatement("INSERT INTO " + SUMMARY_ACCOUNT_STORE_NAME + 
+		PreparedStatement pStmt = persistenceAdmin.prepareStatement("INSERT INTO " + SUMMARY_ACCOUNT_STORE_NAME + 
 				" (" + SUMMARY_ID + ", " + ACCOUNT_ID + ") VALUES(?,?)");
 		for (Account account : accounts) {
 			pStmt.setInt(1, report.getID());
@@ -276,7 +277,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	
 	private CallResult deleteAccounts(SummaryReport report, List<Account> accounts) throws SQLException {
 		CallResult result = new CallResult();
-		PreparedStatement pStmt = prepareStatement("Delete From " + SUMMARY_ACCOUNT_STORE_NAME + 
+		PreparedStatement pStmt = persistenceAdmin.prepareStatement("Delete From " + SUMMARY_ACCOUNT_STORE_NAME + 
 				" Where " + SUMMARY_ID + " = ? And " + ACCOUNT_ID + " = ?");
 		for (Account account : accounts) {
 			pStmt.setInt(1, report.getID());
@@ -288,7 +289,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	
 	private CallResult saveCategories(SummaryReport report, List<Category> categories) throws SQLException {
 		CallResult result = new CallResult();
-		PreparedStatement pStmt = prepareStatement("INSERT INTO " + SUMMARY_CATEGORY_STORE_NAME + 
+		PreparedStatement pStmt = persistenceAdmin.prepareStatement("INSERT INTO " + SUMMARY_CATEGORY_STORE_NAME + 
 				" (" + SUMMARY_ID + ", " + CATEGORY_ID + ") VALUES(?,?)");
 		for (Category category : categories) {
 			pStmt.setInt(1, report.getID());
@@ -300,7 +301,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 	
 	private CallResult deleteCategories(SummaryReport report, List<Category> categories) throws SQLException {
 		CallResult result = new CallResult();
-		PreparedStatement pStmt = prepareStatement("Delete From " + SUMMARY_CATEGORY_STORE_NAME + 
+		PreparedStatement pStmt = persistenceAdmin.prepareStatement("Delete From " + SUMMARY_CATEGORY_STORE_NAME + 
 				" Where " + SUMMARY_ID + " = ? And " + CATEGORY_ID + " = ?");
 		for (Category category : categories) {
 			pStmt.setInt(1, report.getID());
@@ -334,7 +335,7 @@ public class SummaryDaoImplSqlite extends AbstractDaoImplSqlite implements Summa
 		sb.append(") ");
 		sb.append(addGroupBy(report.getSummaryFields()));
 		sb.append(addOrderBy(report.getSummaryFields()));
-		queryResult = executeQueryStatement(sb.toString());
+		queryResult = persistenceAdmin.executeQueryStatement(sb.toString());
 		return queryResult;
 	}
 	

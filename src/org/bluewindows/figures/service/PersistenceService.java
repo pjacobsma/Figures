@@ -28,9 +28,9 @@ import org.bluewindows.figures.dao.AccountDao;
 import org.bluewindows.figures.dao.CategoryDao;
 import org.bluewindows.figures.dao.FilterDao;
 import org.bluewindows.figures.dao.FilterSetDao;
-import org.bluewindows.figures.dao.PersistenceAdminDao;
 import org.bluewindows.figures.dao.SummaryDao;
 import org.bluewindows.figures.dao.TransactionDao;
+import org.bluewindows.figures.dao.admin.PersistenceAdminDao;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.Category;
@@ -84,6 +84,7 @@ public interface PersistenceService {
 	public CallResult addFilter(Filter filter);
 	public CallResult updateFilter(Filter filter);
 	public CallResult deleteFilter(int filterID);
+	public CallResult checkFilterSet(int filterID);
 
 	public CallResult getFilterSets();
 	public CallResult getFilterSet(int filterSetID);

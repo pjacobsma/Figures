@@ -18,25 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package org.bluewindows.figures.dao;
+package org.bluewindows.figures.dao.admin;
 
 import org.bluewindows.figures.domain.CallResult;
-import org.bluewindows.figures.domain.FilterSet;
 
-public interface FilterSetDao {
+public interface PersistenceUpdateDao {
 	
-	public CallResult getSets();
-
-	public CallResult getSet(int filterSetID);
-
-	public CallResult getLastSet();
+	public int getVersion();
+	public CallResult update();
 	
-	public CallResult addSet(FilterSet set);
-	
-	public CallResult updateSet(FilterSet set);
-	
-	public CallResult deleteSet(int setID);
-	
-	public CallResult checkSet(int setID);
-
 }

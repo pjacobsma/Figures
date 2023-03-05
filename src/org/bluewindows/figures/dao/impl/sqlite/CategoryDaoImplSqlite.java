@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.CategoryDao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.Category;
 
@@ -45,7 +46,7 @@ public class CategoryDaoImplSqlite extends AbstractDaoImplSqlite implements Cate
 
 	@Override
 	public CallResult getCategories() {
-		CallResult result = executeQueryStatement("Select * From " + CATEGORY_STORE_NAME + 
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + CATEGORY_STORE_NAME + 
 			" Order By " + NAME);
 		ResultSet resultSet = (ResultSet) result.getReturnedObject();
 		if (result.isGood()) result = mapCategories(resultSet);
@@ -56,7 +57,7 @@ public class CategoryDaoImplSqlite extends AbstractDaoImplSqlite implements Cate
 	@SuppressWarnings("unchecked")
 	@Override
 	public CallResult getLastCategory() {
-		CallResult result = executeQueryStatement("Select * From " + CATEGORY_STORE_NAME + 
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + CATEGORY_STORE_NAME + 
 			" Where ID = (Select Max(" + ID + ") From " + CATEGORY_STORE_NAME + ")");
 		ResultSet resultSet = (ResultSet) result.getReturnedObject();
 		if (result.isGood()) result = mapCategories(resultSet);
@@ -74,7 +75,7 @@ public class CategoryDaoImplSqlite extends AbstractDaoImplSqlite implements Cate
 		try {
 			String insertStmt = "INSERT INTO " + CATEGORY_STORE_NAME + 
 				" (" + ID + ", " + NAME + ") VALUES(?,?)";
-			PreparedStatement pStmt = prepareStatement(insertStmt);
+			PreparedStatement pStmt = persistenceAdmin.prepareStatement(insertStmt);
 			pStmt.setInt(1, category.getID());
 			pStmt.setString(2, category.getName());
 			pStmt.executeUpdate();
@@ -94,7 +95,7 @@ public class CategoryDaoImplSqlite extends AbstractDaoImplSqlite implements Cate
 		try {
 			String insertStmt = "INSERT INTO " + CATEGORY_STORE_NAME + 
 				" (" + NAME + ") VALUES(?)";
-			PreparedStatement pStmt = prepareStatement(insertStmt);
+			PreparedStatement pStmt = persistenceAdmin.prepareStatement(insertStmt);
 			pStmt.setString(1, categoryName);
 			pStmt.executeUpdate();
 			pStmt.close();
@@ -110,12 +111,12 @@ public class CategoryDaoImplSqlite extends AbstractDaoImplSqlite implements Cate
 		String updateStmt = "UPDATE " + CATEGORY_STORE_NAME + " " +
 			"SET " + NAME + " = '" + category.getName() + "' ";
 		updateStmt = updateStmt + "WHERE " + ID + " = " + category.getID();
-		return executeUpdateStatement(updateStmt);
+		return persistenceAdmin.executeUpdateStatement(updateStmt);
 	}
 
 	@Override
 	public CallResult deleteCategory(int categoryID) {
-		return executeUpdateStatement("DELETE FROM " + CATEGORY_STORE_NAME + " WHERE " + ID + " = " + categoryID);
+		return persistenceAdmin.executeUpdateStatement("DELETE FROM " + CATEGORY_STORE_NAME + " WHERE " + ID + " = " + categoryID);
 	}
 
 	private CallResult mapCategories(ResultSet rs) {
@@ -137,7 +138,7 @@ public class CategoryDaoImplSqlite extends AbstractDaoImplSqlite implements Cate
 
 	@Override
 	public CallResult checkCategoryUsage(int categoryID) {
-		CallResult result = executeQueryStatement("Select count(*) From " + TRANSACTION_CATEGORY_STORE_NAME + 
+		CallResult result = persistenceAdmin.executeQueryStatement("Select count(*) From " + TRANSACTION_CATEGORY_STORE_NAME + 
 			" Where " + CATEGORY_ID + " = " + categoryID);
 		Integer rowCount = null;
 		if (result.isGood()) {

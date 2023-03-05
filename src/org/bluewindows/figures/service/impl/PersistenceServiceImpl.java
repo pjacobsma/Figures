@@ -36,9 +36,9 @@ import org.bluewindows.figures.dao.AccountDao;
 import org.bluewindows.figures.dao.CategoryDao;
 import org.bluewindows.figures.dao.FilterDao;
 import org.bluewindows.figures.dao.FilterSetDao;
-import org.bluewindows.figures.dao.PersistenceAdminDao;
 import org.bluewindows.figures.dao.SummaryDao;
 import org.bluewindows.figures.dao.TransactionDao;
+import org.bluewindows.figures.dao.admin.PersistenceAdminDao;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.Category;
@@ -166,6 +166,18 @@ public class PersistenceServiceImpl implements PersistenceService {
 		result = persistenceAdminDao.openExisting(fileName, password);
 		if (result.isBad()) return result;
 		opened = true;
+		result = persistenceAdminDao.getPersistenceVersion();
+		if (result.isBad()) return result;
+		Integer currentVersion = (Integer)result.getReturnedObject(); 
+		if (!currentVersion.equals(Figures.DATABASE_VERSION)) {
+			result = persistenceAdminDao.startTransaction();
+			if (result.isBad()) return result;
+			result = persistenceAdminDao.applyUpdates(Integer.valueOf(currentVersion.intValue()+1), Figures.DATABASE_VERSION);
+			if (result.isBad()) return result;
+			result =  persistenceAdminDao.savePersistenceVersion(Figures.DATABASE_VERSION);
+			if (result.isBad()) return result;
+			result = persistenceAdminDao.commitTransaction();
+		}
 		return result;
 	}
 	
@@ -388,6 +400,11 @@ public class PersistenceServiceImpl implements PersistenceService {
 	public CallResult updateFilterSet(FilterSet filterSet) {
 		Figures.filterSetTimestamp = new Timestamp(System.currentTimeMillis());
 		return filterSetDao.updateSet(filterSet);
+	}
+	
+	@Override
+	public CallResult checkFilterSet(int filterSetID) {
+		return filterSetDao.checkSet(filterSetID);
 	}
 	
 	@Override

@@ -47,8 +47,8 @@ import java.util.Properties;
 
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.app.PersistenceType;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.dao.impl.sqlite.AbstractDaoImplSqlite;
-import org.bluewindows.figures.dao.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.FilterSet;
@@ -217,26 +217,12 @@ public class AbstractDaoImplSqliteTestCase {
 				parameterize(category.getAmount().toStringNumber()) + ")");
 			assertTrue(result.isGood());
 			// Get the category table ID so we can use it on the TransactionCategory table
-			CallResult rowIdResult = executeQueryStatement("select seq from sqlite_sequence where name = '" + TRANSACTION_CATEGORY_STORE_NAME + "'");
+			CallResult rowIdResult = persistenceAdmin.executeQueryStatement("select seq from sqlite_sequence where name = '" + TRANSACTION_CATEGORY_STORE_NAME + "'");
 			assertTrue(rowIdResult.isGood());
 			ResultSet rs = (ResultSet)rowIdResult.getReturnedObject();
 			category.setTransactionCategoryID(rs.getInt(1));
 		}
 		
-	}
-	
-	protected CallResult executeQueryStatement(String sql){
-		CallResult result = persistenceAdmin.checkConnection();
-		if (result.isBad()) return result;
-		ResultSet rs;
-		try {
-			Statement stmt = persistenceAdmin.getConnection().createStatement();
-			rs = stmt.executeQuery(sql);
-		} catch (SQLException e) {
-			Figures.logStackTrace(e);
-			return result.setCallBad("Query Failure", e.getLocalizedMessage());
-		}
-		return result.setReturnedObject(rs);
 	}
 	
 	protected String parameterize(String parameter){
@@ -249,11 +235,11 @@ public class AbstractDaoImplSqliteTestCase {
 		}
 		
 		public CallResult executeUpdateStatement(String sql){
-			return super.executeUpdateStatement(sql);
+			return persistenceAdmin.executeUpdateStatement(sql);
 		}
 		
 		public CallResult executeQueryStatement(String sql){
-			return super.executeQueryStatement(sql);
+			return persistenceAdmin.executeQueryStatement(sql);
 		}
 	}
 }

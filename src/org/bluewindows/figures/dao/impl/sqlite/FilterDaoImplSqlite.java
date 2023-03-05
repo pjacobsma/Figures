@@ -41,6 +41,7 @@ import java.util.List;
 
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.FilterDao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.enums.Deductible;
 import org.bluewindows.figures.filter.Filter;
@@ -53,7 +54,7 @@ public class FilterDaoImplSqlite extends AbstractDaoImplSqlite implements Filter
 
 	@Override
 	public CallResult getFilters(int filterSetID) {
-		CallResult result = executeQueryStatement("Select * From " + FILTER_STORE_NAME + " " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + FILTER_STORE_NAME + " " +
 			"WHERE " + FILTER_SET_ID + " = " + filterSetID + " " +
 			"ORDER BY " + SEQUENCE);
 		if (result.isBad()) {
@@ -67,7 +68,7 @@ public class FilterDaoImplSqlite extends AbstractDaoImplSqlite implements Filter
 	
 	@Override
 	public CallResult getMaxFilterSequence() {
-		CallResult result = executeQueryStatement("Select Max(" + SEQUENCE + ") From " + FILTER_STORE_NAME);
+		CallResult result = persistenceAdmin.executeQueryStatement("Select Max(" + SEQUENCE + ") From " + FILTER_STORE_NAME);
 		if (result.isBad()) return result;
 		ResultSet resultSet = (ResultSet)result.getReturnedObject();
 		Integer maxSequence = null;
@@ -92,7 +93,7 @@ public class FilterDaoImplSqlite extends AbstractDaoImplSqlite implements Filter
 			return result;
 		}
 		try {
-			PreparedStatement pStmt = prepareStatement("INSERT INTO " + FILTER_STORE_NAME + " (" + 
+			PreparedStatement pStmt = persistenceAdmin.prepareStatement("INSERT INTO " + FILTER_STORE_NAME + " (" + 
 				FILTER_SET_ID + ", " +
 				SEQUENCE + ", " + 
 				FIELD + ", " + 
@@ -123,14 +124,14 @@ public class FilterDaoImplSqlite extends AbstractDaoImplSqlite implements Filter
 
 	@Override
 	public CallResult deleteFilter(int filterID) {
-		return executeUpdateStatement("DELETE FROM " + FILTER_STORE_NAME + " " + "WHERE " + ID + " = " + filterID);
+		return persistenceAdmin.executeUpdateStatement("DELETE FROM " + FILTER_STORE_NAME + " " + "WHERE " + ID + " = " + filterID);
 	}
 
 	@Override
 	public CallResult updateFilter(Filter filter) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement pStmt = prepareStatement("UPDATE " + FILTER_STORE_NAME + " " +
+			PreparedStatement pStmt = persistenceAdmin.prepareStatement("UPDATE " + FILTER_STORE_NAME + " " +
 				"SET " + SEQUENCE + " = ?" +
 				", " + FIELD + " = ?" +
 				", " + EXPRESSION + " = ?" +
@@ -165,7 +166,7 @@ public class FilterDaoImplSqlite extends AbstractDaoImplSqlite implements Filter
 
 	@Override
 	public CallResult getMaxSequence() {
-		CallResult callResult = executeQueryStatement("Select Max(" + SEQUENCE + ") as MaxSeq From " + FILTER_STORE_NAME);
+		CallResult callResult = persistenceAdmin.executeQueryStatement("Select Max(" + SEQUENCE + ") as MaxSeq From " + FILTER_STORE_NAME);
 		if (callResult.isGood()) {
 			ResultSet resultSet = (ResultSet) callResult.getReturnedObject();
 			try {

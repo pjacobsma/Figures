@@ -30,8 +30,10 @@ import java.util.List;
 
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.FilterSetDao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.FilterSet;
+import org.bluewindows.figures.domain.persistence.Persistence;
 import org.bluewindows.figures.filter.Filter;
 import org.bluewindows.figures.service.ServiceFactory;
 
@@ -43,7 +45,7 @@ public class FilterSetDaoImplSqlite extends AbstractDaoImplSqlite implements Fil
 
 	@Override
 	public CallResult getSets() {
-		CallResult result = executeQueryStatement("Select * From " + FILTER_SET_STORE_NAME + " ORDER BY " + NAME);
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + FILTER_SET_STORE_NAME + " ORDER BY " + NAME);
 		if (result.isGood()) {
 			ResultSet resultSet = (ResultSet) result.getReturnedObject();
 			result = mapFilterSets(resultSet);
@@ -55,7 +57,7 @@ public class FilterSetDaoImplSqlite extends AbstractDaoImplSqlite implements Fil
 	@SuppressWarnings("unchecked")
 	@Override
 	public CallResult getSet(int filterSetID) {
-		CallResult result = executeQueryStatement("Select * From " + FILTER_SET_STORE_NAME + " Where " + ID + " = " + filterSetID);
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + FILTER_SET_STORE_NAME + " Where " + ID + " = " + filterSetID);
 		if (result.isBad()) return result;
 		ResultSet resultSet = (ResultSet) result.getReturnedObject();
 		result = mapFilterSets(resultSet);
@@ -70,7 +72,7 @@ public class FilterSetDaoImplSqlite extends AbstractDaoImplSqlite implements Fil
 	@SuppressWarnings("unchecked")
 	@Override
 	public CallResult getLastSet() {
-		CallResult result = executeQueryStatement("Select * From " + FILTER_SET_STORE_NAME + " Where " + ID +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + FILTER_SET_STORE_NAME + " Where " + ID +
 			" = (Select Max(" + ID + ") From " + FILTER_SET_STORE_NAME + ")");
 		if (result.isBad()) return result;
 		ResultSet resultSet = (ResultSet) result.getReturnedObject();
@@ -88,7 +90,7 @@ public class FilterSetDaoImplSqlite extends AbstractDaoImplSqlite implements Fil
 	public CallResult addSet(FilterSet filterSet) {
 		CallResult result = new CallResult();
 		try {
-			PreparedStatement pStmt = prepareStatement("INSERT INTO " + FILTER_SET_STORE_NAME + " " +
+			PreparedStatement pStmt = persistenceAdmin.prepareStatement("INSERT INTO " + FILTER_SET_STORE_NAME + " " +
 					"(" + NAME + ", " +
 					DEFAULT_FIELD + ", " +
 					DEFAULT_EXPRESSION + ", " +
@@ -109,13 +111,13 @@ public class FilterSetDaoImplSqlite extends AbstractDaoImplSqlite implements Fil
 	@Override
 	public CallResult deleteSet(int filterSetID) {
 		ServiceFactory.getInstance().getPersistenceSvc().startTransaction();
-		CallResult result = executeUpdateStatement("DELETE FROM " + FILTER_STORE_NAME + " " +
+		CallResult result = persistenceAdmin.executeUpdateStatement("DELETE FROM " + FILTER_STORE_NAME + " " +
 				"WHERE " + FILTER_SET_ID + " = " + filterSetID);
 		if (result.isBad()) {
 			ServiceFactory.getInstance().getPersistenceSvc().rollBackTransaction();
 			return result;
 		}
-		result = executeUpdateStatement("DELETE FROM " + FILTER_SET_STORE_NAME + " " +
+		result = persistenceAdmin.executeUpdateStatement("DELETE FROM " + FILTER_SET_STORE_NAME + " " +
 			"WHERE " + ID + " = " + filterSetID);
 		if (result.isBad()) {
 			ServiceFactory.getInstance().getPersistenceSvc().rollBackTransaction();
@@ -127,12 +129,30 @@ public class FilterSetDaoImplSqlite extends AbstractDaoImplSqlite implements Fil
 
 	@Override
 	public CallResult updateSet(FilterSet filterSet) {
-		return executeUpdateStatement("UPDATE " + FILTER_SET_STORE_NAME + " " +
+		return persistenceAdmin.executeUpdateStatement("UPDATE " + FILTER_SET_STORE_NAME + " " +
 			"SET " + NAME + " = '" + filterSet.getName() + "', " +
 			DEFAULT_FIELD + " = '" + filterSet.getDefaultColumn() + "', " + 
 			DEFAULT_EXPRESSION + " = '" + filterSet.getDefaultExpression() + "', " + 
 			DEFAULT_RESULT + " = '" + filterSet.getDefaultResult() + "' " + 
 			"WHERE " + ID + " = " + filterSet.getID());
+	}
+	
+	@Override
+	public CallResult checkSet(int id){
+		CallResult result = persistenceAdmin.executeQueryStatement("Select 1 From " + FILTER_SET_STORE_NAME +
+			" Where " + Persistence.ID + " = " + id);
+		if (result.isBad()) return result;
+		try {
+			ResultSet rs = (ResultSet)result.getReturnedObject();
+			if (rs.next()) {
+				closeResultSet(rs);
+				return result;
+			}
+		} catch (SQLException e) {
+			Figures.logStackTrace(e);
+			return result.setCallBad("Check Filter Set Failure", e.getLocalizedMessage());
+		}
+		return result.setCallBad("Filter Set Lookup Failure", "Filter set not found.");
 	}
 
 	private CallResult mapFilterSets(ResultSet rs) {

@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.AccountDao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.FilterSet;
@@ -48,7 +49,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 
 	@Override
 	public CallResult getAccounts() {
-		CallResult result = executeQueryStatement("Select * From " + ACCOUNT_STORE_NAME + " " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + ACCOUNT_STORE_NAME + " " +
 	    	"ORDER BY " + NAME);
 		ResultSet resultSet = (ResultSet)result.getReturnedObject();
 		if (result.isGood()){
@@ -60,7 +61,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 	
 	@Override
 	public CallResult getAccount(int accountID) {
-		CallResult result = executeQueryStatement("Select * From " + ACCOUNT_STORE_NAME + " " +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + ACCOUNT_STORE_NAME + " " +
 	    	"Where " + ID + " = " + accountID);
 		if (result.isBad()) return result;
 		ResultSet resultSet = (ResultSet)result.getReturnedObject();
@@ -81,7 +82,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 	@SuppressWarnings("unchecked")
 	@Override
 	public CallResult getLastAccount() {
-		CallResult result = executeQueryStatement("Select * From " + ACCOUNT_STORE_NAME +
+		CallResult result = persistenceAdmin.executeQueryStatement("Select * From " + ACCOUNT_STORE_NAME +
 			" Where ID = (Select Max(" + ID + ") From " + ACCOUNT_STORE_NAME + ")");
 		if (result.isBad()) return result;
 		ResultSet resultSet = (ResultSet)result.getReturnedObject();
@@ -98,7 +99,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 	public CallResult addAccount(Account account) {
 		CallResult result = new CallResult();
 		if (account.getFilterSet() != null && !account.getFilterSet().equals(FilterSet.NONE)){
-			result = checkFilterSet(account.getFilterSet().getID());
+			result = ServiceFactory.getInstance().getPersistenceSvc().checkFilterSet(account.getFilterSet().getID());
 			if (result.isBad() && result.getErrorMessage().equals("Filter set not found.")) {
 				return result.setCallBad("Account Update Failed", "Invalid filter set ID: " + account.getFilterSet().getID());
 			}
@@ -106,7 +107,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 			account.setFilterSet(FilterSet.NONE);
 		}
 		try {
-			PreparedStatement pStmt = prepareStatement("INSERT INTO " + ACCOUNT_STORE_NAME + 
+			PreparedStatement pStmt = persistenceAdmin.prepareStatement("INSERT INTO " + ACCOUNT_STORE_NAME + 
 				" (" + NAME + ", " + TYPE + ", " +
 				FILTER_SET_ID + ", " + INITIAL_BALANCE + ", " + LAST_LOAD_DATE + ", " + LAST_FILTER_DATE + ") VALUES(?,?,?,?,?,?)");
 			pStmt.setString(1,account.getName());
@@ -127,7 +128,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 
 	@Override
 	public CallResult updateAccount(Account account) {
-		return executeUpdateStatement("UPDATE " + ACCOUNT_STORE_NAME + " " +
+		return persistenceAdmin.executeUpdateStatement("UPDATE " + ACCOUNT_STORE_NAME + " " +
 			"SET " + NAME + " = '" + account.getName() + "' " +
 			", " + FILTER_SET_ID + " = " + account.getFilterSet().getID() + " " +
 			", " + INITIAL_BALANCE + " = " + account.getInitialBalance().getValue() + " " +
@@ -139,7 +140,7 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 
 	@Override
 	public CallResult deleteAccount(Account account) {
-		return executeUpdateStatement("DELETE FROM " + ACCOUNT_STORE_NAME + " WHERE " + ID + " = " + account.getID());
+		return persistenceAdmin.executeUpdateStatement("DELETE FROM " + ACCOUNT_STORE_NAME + " WHERE " + ID + " = " + account.getID());
 	}
 
 	private CallResult mapAccounts(ResultSet rs) {
@@ -152,10 +153,10 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 				if (result.isBad()) return result;
 				FilterSet filterSet = result.getReturnedObject() == null? FilterSet.NONE: (FilterSet)result.getReturnedObject();
 				AccountType type = AccountType.valueOf(rs.getString(TYPE));
-				result = mapDate(rs, LAST_LOAD_DATE);
+				result = persistenceAdmin.mapDate(rs, LAST_LOAD_DATE);
 				if (result.isBad()) return result;
 				TransactionDate lastLoadDate = (TransactionDate)result.getReturnedObject();
-				result = mapDate(rs, LAST_FILTER_DATE);
+				result = persistenceAdmin.mapDate(rs, LAST_FILTER_DATE);
 				if (result.isBad()) return result;
 				Account account = new Account(rs.getInt(ID), rs.getString(NAME), type, filterSet, 
 						new Money(rs.getString(INITIAL_BALANCE)), lastLoadDate, (TransactionDate)result.getReturnedObject());
@@ -173,10 +174,10 @@ public class AccountDaoImplSqlite extends AbstractDaoImplSqlite implements Accou
 	}
 
 	private int getNewAccountID(){
-		CallResult result = executeQueryStatement("Select max(" + ID + ") as ID From " + ACCOUNT_STORE_NAME);
+		CallResult result = persistenceAdmin.executeQueryStatement("Select max(" + ID + ") as ID From " + ACCOUNT_STORE_NAME);
 		if (result.isBad()) return 0;
 		ResultSet rs = (ResultSet)result.getReturnedObject();
-		result = mapInteger(rs, ID);
+		result = persistenceAdmin.mapInteger(rs, ID);
 		closeResultSet(rs);
 		if (result.isBad()) return 0;
 		return ((Integer)result.getReturnedObject()).intValue();

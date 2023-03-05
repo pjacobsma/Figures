@@ -129,7 +129,7 @@ public class FilterSetDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 		result = filterSetDao.getSets();
 		assertTrue(result.isGood());
 		assertEquals(1, ((List<FilterSet>)result.getReturnedObject()).size());
-		result = executeQueryStatement("Select count(*) from " + FILTER_STORE_NAME + " Where " + FILTER_SET_ID + " = " + filterSet.getID());
+		result = persistenceAdmin.executeQueryStatement("Select count(*) from " + FILTER_STORE_NAME + " Where " + FILTER_SET_ID + " = " + filterSet.getID());
 		assertTrue(result.isGood());
 		ResultSet rs = (ResultSet)result.getReturnedObject();
 		int filterCount = rs.getInt(1);

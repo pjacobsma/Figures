@@ -17,26 +17,13 @@
  * along with Figures; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package org.bluewindows.figures.dao.admin;
 
-package org.bluewindows.figures.dao;
+import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceAdminDaoImplSqlite;
 
-import org.bluewindows.figures.domain.CallResult;
-import org.bluewindows.figures.domain.FilterSet;
+public class AbstractPersistenceUpdateDaoSqlite {
+	
+	protected PersistenceAdminDaoImplSqlite persistenceAdmin = new PersistenceAdminDaoImplSqlite();
 
-public interface FilterSetDao {
-	
-	public CallResult getSets();
-
-	public CallResult getSet(int filterSetID);
-
-	public CallResult getLastSet();
-	
-	public CallResult addSet(FilterSet set);
-	
-	public CallResult updateSet(FilterSet set);
-	
-	public CallResult deleteSet(int setID);
-	
-	public CallResult checkSet(int setID);
 
 }
