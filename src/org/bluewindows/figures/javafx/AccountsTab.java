@@ -26,9 +26,11 @@ import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bluewindows.figures.app.Figures;
@@ -48,6 +50,7 @@ import org.bluewindows.figures.domain.DeductibleOnlyCriterion;
 import org.bluewindows.figures.domain.DepositsCriterion;
 import org.bluewindows.figures.domain.DescriptionCriterion;
 import org.bluewindows.figures.domain.FilterSet;
+import org.bluewindows.figures.domain.IdCriterion;
 import org.bluewindows.figures.domain.MemoCriterion;
 import org.bluewindows.figures.domain.Money;
 import org.bluewindows.figures.domain.SearchCriterion;
@@ -196,6 +199,7 @@ public class AccountsTab {
 	private Timestamp categoryTimestamp = new Timestamp(0);
 	private Timestamp transactionTimestamp = new Timestamp(0);
 	private List<TableColumn<DisplayableTransaction, ?>> sortOrder = new ArrayList<TableColumn<DisplayableTransaction, ?>>();
+	private List<IdCriterion> editedIdCriteria = new ArrayList<IdCriterion>();
 	
 	public Tab getAccountsTab() throws Exception {
 		accountTab = new Tab("Accounts");
@@ -236,6 +240,7 @@ public class AccountsTab {
 			setTransactionButtonsVisible(false);
 			transactionTable.setVisible(false);
 			transactionTable.getItems().clear();
+			editedIdCriteria.clear();
 			searchTransactionBar.setVisible(false);
 			printExportButton.setDisable(false);
 		}
@@ -411,6 +416,7 @@ public class AccountsTab {
 			if (!description.equals(transaction.getDescription())) {
 				transaction.setDescription(description);
 				transaction.setUserChangedDesc(true);
+				editedIdCriteria.add(new IdCriterion(transaction.getID()));
 		        CallResult result = ServiceFactory.getInstance().getPersistenceSvc().updateTransaction(transaction);
 		        if (result.isBad()) {
             		ServiceFactory.getInstance().getDisplaySvc().displayErrorMessage("Error Updating Description", result.getErrorMessage());
@@ -505,6 +511,7 @@ public class AccountsTab {
 			if (!memo.equals(transaction.getMemo())) {
 				transaction.setMemo(memo);
 				transaction.setUserChangedMemo(true);
+				editedIdCriteria.add(new IdCriterion(transaction.getID()));
 		        CallResult result = ServiceFactory.getInstance().getPersistenceSvc().updateTransaction(transaction);
 		        if (result.isBad()) {
             		ServiceFactory.getInstance().getDisplaySvc().displayErrorMessage("Error Updating Memo", result.getErrorMessage());
@@ -533,6 +540,7 @@ public class AccountsTab {
 			if (deductible != transaction.isDeductible()) {
 				transaction.setDeductible(deductible);
 				transaction.setUserChangedDeductible(true);
+				editedIdCriteria.add(new IdCriterion(transaction.getID()));
 		        CallResult result = ServiceFactory.getInstance().getPersistenceSvc().updateTransaction(transaction);
 		        if (result.isBad()) {
             		ServiceFactory.getInstance().getDisplaySvc().displayErrorMessage("Error Updating Category", result.getErrorMessage());
@@ -540,7 +548,6 @@ public class AccountsTab {
 		        }
 			}
 	    });
-
 		
 		TableColumn<DisplayableTransaction, Money> balanceColumn = new TableColumn<DisplayableTransaction, Money>("Balance");
 		balanceColumn.setPrefWidth(100);
@@ -928,6 +935,7 @@ public class AccountsTab {
 		        	return; 
 				};
 		        Transaction transaction = transactionTable.getSelectionModel().getSelectedItem();
+		        editedIdCriteria.add(new IdCriterion(transaction.getID()));
 		        CallResult result = ServiceFactory.getInstance().getPersistenceSvc().getCategories();
 		        if (result.isBad()){
 		        	ServiceFactory.getInstance().getDisplaySvc().setStatusBad(result);
@@ -1209,6 +1217,7 @@ public class AccountsTab {
 			@Override
 			public void handle(ActionEvent event) {
 				printExportButton.setDisable(false);
+				editedIdCriteria.clear();
 				ServiceFactory.getInstance().getDisplaySvc().clearStatus();
             	if (startDatePicker.getValue().isAfter(endDatePicker.getValue())) {
 					ServiceFactory.getInstance().getDisplaySvc().displayErrorMessage("Invalid Date Range", "Start date is after end date");
@@ -1243,6 +1252,14 @@ public class AccountsTab {
 					break;
 				}
 			}
+			// Add in any transactions edited by the user
+			// The user should continue to see their changes even if they violate the search criteria
+			for (IdCriterion searchCriterion : editedIdCriteria) {
+				if (searchCriterion.matches(transaction)) {
+					addTransaction = true;
+					break;
+				}
+			}
 			if (addTransaction) {
 				displayableTransactions.add(new DisplayableTransaction(transaction));
 			}
@@ -1274,6 +1291,7 @@ public class AccountsTab {
 		return new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
+				editedIdCriteria.clear();
 				ServiceFactory.getInstance().getDisplaySvc().clearStatus();
 				resetSearchControls();
 				transactionTimestamp = new Timestamp(0);
