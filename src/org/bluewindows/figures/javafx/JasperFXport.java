@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Set;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -33,11 +34,14 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -77,6 +81,8 @@ public class JasperFXport {
 	private WebView webView;
 	private double displayWidth;
 	private double displayHeight;
+	private Double previousValue = (double) 0;
+	private Double deltaY = (double) 0;
 
 	/**
 	* Provides a native JavaFX print/export UI for a Jasper Report.
@@ -144,6 +150,7 @@ public class JasperFXport {
 
 	private void generatePageImage(int pageNumber) {
 		webView.getEngine().loadContent(generateHtml(Integer.valueOf(pageNumber)));
+		webView.getEngine().executeScript("window.scrollTo(" + 0 + ", " + 0 + ")");
 	}
 	
 	private String generateHtml(Integer pageNumber) {
@@ -174,7 +181,7 @@ public class JasperFXport {
 			stage.setScene(scene);
 		}
 		displayPane.setOnKeyPressed((KeyEvent event) -> {
-			if (scene.focusOwnerProperty().get() instanceof Slider) {
+			if (scene != null && scene.focusOwnerProperty().get() instanceof Slider) {
 				event.consume();
 	            if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.RIGHT) {
 	                pageSlider.setValue(pageSlider.getValue()+1);
@@ -212,34 +219,115 @@ public class JasperFXport {
 			webView.prefHeightProperty().bind(displayPane.heightProperty());
 			webView.maxHeightProperty().bind(displayPane.heightProperty());
 		}
+		
 		// Allow user to scroll pages using arrow keys when page slider is focused
 		webView.setOnKeyPressed((KeyEvent event) -> {
-			if (scene.focusOwnerProperty().get() instanceof Slider) {
+			if (scene != null && scene.focusOwnerProperty().get() instanceof Slider) {
 	            if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.RIGHT) {
 	                pageSlider.setValue(pageSlider.getValue()+1);
 	            }else if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT) {
 	                pageSlider.setValue(pageSlider.getValue()-1);
 	            }
+	            event.consume();
+			}else {
+				handleWebviewKeyEvent(event);
 			}
-            event.consume();
 		});
 		// Allow the use of the mouse wheel to scroll the pages when when page slider is focused
 		webView.setOnScroll((ScrollEvent event) -> {
 			if (scene != null && scene.focusOwnerProperty().get() instanceof Slider) {
-				int currentPage = (int) pageSlider.getValue();
 				if (event.getDeltaY() < 0) {
-					if (currentPage < jasperPrint.getPages().size()) pageSlider.setValue(currentPage + 1);
+					if (pageSlider.getValue() < jasperPrint.getPages().size()) pageSlider.setValue(pageSlider.getValue() + 1);
 				} else {
-					if (currentPage > 0) pageSlider.setValue(currentPage - 1);
+					if (pageSlider.getValue() > 0) pageSlider.setValue(pageSlider.getValue() - 1);
 				}
+			}else {
+				handleWebviewScrollEvent(event);
 			}
-			event.consume();
 		});
 		Platform.runLater(()->displayPane.requestLayout());
 		if (pageSlider != null) {
 			Platform.runLater(()->pageSlider.requestFocus());
 		}
 		if (stage != null) stage.show();
+	}
+	
+	private ScrollBar getWebviewVerticalScrollBar() {
+		ScrollBar verticalBar = null;
+		Set<Node> scrollBars = webView.lookupAll(".scroll-bar");
+        for (Node node : scrollBars) {
+           	if (((ScrollBar)node).getOrientation() == Orientation.VERTICAL && ((ScrollBar)node).getVisibleAmount() > 0) {
+            	verticalBar = (ScrollBar) node;
+                break;
+            }
+        }
+        return verticalBar;
+	}
+	
+	private void handleWebviewScrollEvent(ScrollEvent event) {
+		ScrollBar verticalBar = getWebviewVerticalScrollBar();
+		if (verticalBar != null) {
+			double checkValue;
+			if (event.getDeltaY() < 0) {
+				checkValue = Double.valueOf(previousValue - event.getDeltaY());
+			}else {
+				checkValue = Double.valueOf(previousValue - event.getDeltaY());
+			}
+			previousValue = verticalBar.getValue();
+            if (checkValue >= verticalBar.getMax()) {
+            	if (pageSlider.getValue() < jasperPrint.getPages().size()) {
+            		pageSlider.setValue(pageSlider.getValue() + 1);
+            		previousValue = Double.valueOf(0);
+            	}
+            }else if (checkValue <= verticalBar.getMin()) {
+            	if (pageSlider.getValue() > 0) {
+            		pageSlider.setValue(pageSlider.getValue() - 1);
+            		previousValue = Double.valueOf(0);
+            	}
+            }
+		}
+	}
+	
+	private void handleWebviewKeyEvent(KeyEvent event) {
+		ScrollBar verticalBar = getWebviewVerticalScrollBar();
+		if (verticalBar != null) {
+			if (deltaY == 0) deltaY = Double.valueOf(java.lang.Math.abs(verticalBar.getValue() - previousValue));
+			double checkValue;
+			if (event.getCode() == KeyCode.DOWN) {
+				checkValue = Double.valueOf(previousValue + deltaY);
+			}else if (event.getCode() == KeyCode.UP) {
+				checkValue = Double.valueOf(previousValue - deltaY);
+			}else {
+				return;
+			}
+			previousValue = Double.valueOf(checkValue);
+			if (deltaY == 0) return;
+            if (checkValue >= verticalBar.getMax()) {
+            	event.consume();
+            	if (pageSlider.getValue() < jasperPrint.getPages().size()) {
+            		previousValue = Double.valueOf(0);
+            		pageSlider.setValue(pageSlider.getValue() + 1);
+            	}else {
+            		previousValue = Double.valueOf(verticalBar.getMax());
+            	}
+        		sleep(250);
+            }else if (checkValue <= verticalBar.getMin()) {
+            	event.consume();
+           		previousValue = Double.valueOf(0);
+           	   	if (pageSlider.getValue() > 0) {
+            		pageSlider.setValue(pageSlider.getValue() - 1);
+            	}
+        		sleep(250);
+            }
+		}
+	}
+	
+	private void sleep(int milliseconds) {
+		try {
+			Thread.sleep(milliseconds);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private HBox getButtonBar() {
