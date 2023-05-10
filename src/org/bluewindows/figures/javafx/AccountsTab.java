@@ -1240,6 +1240,9 @@ public class AccountsTab {
 	
 	private List<DisplayableTransaction> getSearchResults(List<SearchCriterion> searchCriteria){
 		List<DisplayableTransaction> displayableTransactions = new ArrayList<DisplayableTransaction>();
+		if (searchCriteria == null) {
+			return displayableTransactions;
+		}
 		boolean addTransaction;
 		// Transaction must satisfy all search criteria to be included
 		for (Transaction transaction : transactions) {
@@ -1901,6 +1904,10 @@ public class AccountsTab {
 			}else {
 				AmountEqualsCriterion equalsCriterion = new AmountEqualsCriterion(fromValue);
 				criterionList.add(equalsCriterion);
+			}
+		}else {
+			if (equals.isSelected() || lessThan.isSelected() || greaterThan.isSelected() || between.isSelected()) {
+				ServiceFactory.getInstance().getDisplaySvc().setStatusHelp("An amount button is selected but no amount is specified.");
 			}
 		}
 		if (withdrawals.isSelected()) {
