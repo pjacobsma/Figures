@@ -82,7 +82,8 @@ public class JasperFXport {
 	private double displayWidth;
 	private double displayHeight;
 	private Double previousValue = (double) 0;
-	private Double deltaY = (double) 0;
+	private Double scrollDeltaY = (double) 0;
+	private Double keyDeltaY = (double) 0;
 
 	/**
 	* Provides a native JavaFX print/export UI for a Jasper Report.
@@ -150,7 +151,8 @@ public class JasperFXport {
 
 	private void generatePageImage(int pageNumber) {
 		webView.getEngine().loadContent(generateHtml(Integer.valueOf(pageNumber)));
-		webView.getEngine().executeScript("window.scrollTo(" + 0 + ", " + 0 + ")");
+		Platform.runLater(()->webView.requestFocus());
+
 	}
 	
 	private String generateHtml(Integer pageNumber) {
@@ -181,13 +183,17 @@ public class JasperFXport {
 			stage.setScene(scene);
 		}
 		displayPane.setOnKeyPressed((KeyEvent event) -> {
-			if (scene != null && scene.focusOwnerProperty().get() instanceof Slider) {
+			if (scene == null) {
 				event.consume();
-	            if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.RIGHT) {
-	                pageSlider.setValue(pageSlider.getValue()+1);
-	            }else if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT) {
-	                pageSlider.setValue(pageSlider.getValue()-1);
-	            }
+			}else {
+				if (scene.focusOwnerProperty().get() instanceof Slider) {
+					event.consume();
+		            if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.RIGHT) {
+		                pageSlider.setValue(pageSlider.getValue()+1);
+		            }else if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.LEFT) {
+		                pageSlider.setValue(pageSlider.getValue()-1);
+		            }
+				}
 			}
 		});
 		
@@ -267,23 +273,26 @@ public class JasperFXport {
 	private void handleWebviewScrollEvent(ScrollEvent event) {
 		ScrollBar verticalBar = getWebviewVerticalScrollBar();
 		if (verticalBar != null) {
+			if (scrollDeltaY == 0) scrollDeltaY = Double.valueOf(java.lang.Math.abs(verticalBar.getValue() - previousValue));
 			double checkValue;
 			if (event.getDeltaY() < 0) {
-				checkValue = Double.valueOf(previousValue - event.getDeltaY());
+				checkValue = Double.valueOf(previousValue + scrollDeltaY);
 			}else {
-				checkValue = Double.valueOf(previousValue - event.getDeltaY());
+				checkValue = Double.valueOf(previousValue - scrollDeltaY);
 			}
-			previousValue = verticalBar.getValue();
+			previousValue = checkValue;
             if (checkValue >= verticalBar.getMax()) {
             	if (pageSlider.getValue() < jasperPrint.getPages().size()) {
             		pageSlider.setValue(pageSlider.getValue() + 1);
             		previousValue = Double.valueOf(0);
+            	}else {
+            		previousValue = Double.valueOf(verticalBar.getMax());
             	}
             }else if (checkValue <= verticalBar.getMin()) {
             	if (pageSlider.getValue() > 0) {
             		pageSlider.setValue(pageSlider.getValue() - 1);
-            		previousValue = Double.valueOf(0);
             	}
+        		previousValue = Double.valueOf(0);
             }
 		}
 	}
@@ -291,17 +300,21 @@ public class JasperFXport {
 	private void handleWebviewKeyEvent(KeyEvent event) {
 		ScrollBar verticalBar = getWebviewVerticalScrollBar();
 		if (verticalBar != null) {
-			if (deltaY == 0) deltaY = Double.valueOf(java.lang.Math.abs(verticalBar.getValue() - previousValue));
+			if (keyDeltaY == 0) {
+				keyDeltaY = Double.valueOf(java.lang.Math.abs(verticalBar.getValue() - previousValue));
+				event.consume();
+				return;
+			}
 			double checkValue;
 			if (event.getCode() == KeyCode.DOWN) {
-				checkValue = Double.valueOf(previousValue + deltaY);
+				checkValue = Double.valueOf(previousValue + keyDeltaY);
 			}else if (event.getCode() == KeyCode.UP) {
-				checkValue = Double.valueOf(previousValue - deltaY);
+				checkValue = Double.valueOf(previousValue - keyDeltaY);
 			}else {
 				return;
 			}
-			previousValue = Double.valueOf(checkValue);
-			if (deltaY == 0) return;
+			previousValue = checkValue;
+			if (keyDeltaY == 0) return;
             if (checkValue >= verticalBar.getMax()) {
             	event.consume();
             	if (pageSlider.getValue() < jasperPrint.getPages().size()) {
@@ -310,23 +323,13 @@ public class JasperFXport {
             	}else {
             		previousValue = Double.valueOf(verticalBar.getMax());
             	}
-        		sleep(250);
-            }else if (checkValue <= verticalBar.getMin()) {
+             }else if (checkValue <= 0) {
             	event.consume();
            		previousValue = Double.valueOf(0);
            	   	if (pageSlider.getValue() > 0) {
             		pageSlider.setValue(pageSlider.getValue() - 1);
             	}
-        		sleep(250);
             }
-		}
-	}
-	
-	private void sleep(int milliseconds) {
-		try {
-			Thread.sleep(milliseconds);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 	
