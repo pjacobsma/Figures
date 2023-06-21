@@ -40,7 +40,6 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -88,19 +87,11 @@ public class NewFiltersOptionsPane {
 		filterTimeFrameGroup = new ToggleGroup();
 
 		RadioButton newTransactionsButton = new RadioButton("New Transactions Only");
-		newTransactionsButton.setTooltip(new Tooltip("Include only the transactions loaded in the last import"));
 		newTransactionsButton.setSelected(true);
 		newTransactionsButton.setToggleGroup(filterTimeFrameGroup);
-		RadioButtonToggleHandler newTransactionsButtonToggler = new RadioButtonToggleHandler(newTransactionsButton);
-		newTransactionsButton.setOnMousePressed(newTransactionsButtonToggler.getMousePressed());
-		newTransactionsButton.setOnMouseReleased(newTransactionsButtonToggler.getMouseReleased());
 		scopeBox.getChildren().add(newTransactionsButton);
 		RadioButton allTransactionsButton = new RadioButton("All Transactions");
-		allTransactionsButton.setTooltip(new Tooltip("Include every transaction in the data file"));
 		allTransactionsButton.setToggleGroup(filterTimeFrameGroup);
-		RadioButtonToggleHandler allTransactionsButtonToggler = new RadioButtonToggleHandler(allTransactionsButton);
-		allTransactionsButton.setOnMousePressed(allTransactionsButtonToggler.getMousePressed());
-		allTransactionsButton.setOnMouseReleased(allTransactionsButtonToggler.getMouseReleased());
 		scopeBox.getChildren().add(allTransactionsButton);
 		
 		HBox dateBox = new HBox();
@@ -110,10 +101,7 @@ public class NewFiltersOptionsPane {
 		dateBox.getChildren().add(dateLabel);
 		datePicker = getDatePicker();
 		datePicker.setValue(account.getLastLoadedDate().value());
-//		datePicker.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
 		datePicker.valueProperty().addListener((ov, oldValue, newValue) -> {
-//        	LocalDate date = datePicker.getConverter().fromString(datePicker.getEditor().getText());
-//        	if (date != null) datePicker.setValue(date);
 			if (datePicker.focusedProperty().getValue()) {
             	if (allTransactionsButton.isSelected()) allTransactionsButton.setSelected(false);
             	if (newTransactionsButton.isSelected()) newTransactionsButton.setSelected(false);
