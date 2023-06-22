@@ -177,15 +177,6 @@ public class DisplayServiceImplJavaFX extends Application implements DisplayServ
 		BorderPane.setAlignment(tabPane, Pos.BOTTOM_LEFT);
 		BorderPane.setMargin(tabPane, new Insets(0, 0, 0, 0));
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
-//		tabPane.setFocusTraversable(false);
-//		tabPane.addEventFilter(KeyEvent.ANY, event -> {
-//			if (tabPane.isFocused()) {
-//			    if (event.getCode().isArrowKey()) {                  
-//			        System.out.println("Is arrow key");              
-//			        event.consume();                                 
-//			    }                                                    
-//			}
-//		}); 
 		tabPane.maxHeightProperty().bind(borderPane.heightProperty().subtract(10));
 		tabPane.prefWidthProperty().bind(borderPane.widthProperty().subtract(20));
 		tabPane.maxWidthProperty().bind(borderPane.widthProperty().subtract(20));
@@ -684,7 +675,7 @@ public class DisplayServiceImplJavaFX extends Application implements DisplayServ
 	
 	@Override
 	public void displayHelp(String fileName) {
-		File file = new File("/Figures/Help/" + fileName);
+		File file = new File(Figures.HELP_FOLDER + "\\" + fileName);
 		if (!file.exists()) {
 			setStatusBad("Help page not found: " + fileName);
 			return;

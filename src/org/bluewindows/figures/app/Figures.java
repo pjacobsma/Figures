@@ -78,6 +78,8 @@ public class Figures {
 	public static final List<String> STANDARD_DATE_LIST = new ArrayList<String>();
 	public static final String DEFAULT_PERSISTENCE_NAME = "\\Figures\\Figures.db";
 	public static final String DEFAULT_DATA_FOLDER = "\\Figures";
+	public static final String DEFAULT_HELP_FOLDER = "\\Figures\\Help";
+	public static String HELP_FOLDER;
 	public static final Map<String, DateTimeFormatter> DATE_FORMAT_MAP = new HashMap<String, DateTimeFormatter>();
 	public static final List<Category> DEFAULT_CATEGORIES = new ArrayList<Category>();
 	public static DateTimeFormatter dateFormat;
@@ -131,7 +133,8 @@ public class Figures {
 	
 	public static void main(String[] args) {
 		try {
-			checkDefaultFolder();
+			checkDefaultDataFolder();
+			checkDefaultHelpFolder();
 			configureLogging();
 			setReportFont();
 		} catch (Exception e) {
@@ -164,8 +167,8 @@ public class Figures {
 		initializeTheServices();
 	}
 	
-	private static void checkDefaultFolder() {
-		Path defaultDataPath = Paths.get(Figures.DEFAULT_DATA_FOLDER);
+	private static void checkDefaultDataFolder() {
+		Path defaultDataPath = Paths.get(DEFAULT_DATA_FOLDER);
 		if (!Files.exists(defaultDataPath)) {
 			try {
 				Files.createDirectory(defaultDataPath);
@@ -173,6 +176,17 @@ public class Figures {
 				logStackTrace(e);
 				System.exit(1);
 			}
+		}
+	}
+	
+	private static void checkDefaultHelpFolder() {
+		Path defaultHelpPath = Paths.get(DEFAULT_HELP_FOLDER);
+		if (!Files.exists(defaultHelpPath)) { // Running in Eclipse without installed app
+			Path currentRelativePath = Paths.get("");
+			String currentPath = currentRelativePath.toAbsolutePath().toString();
+			HELP_FOLDER = currentPath + "\\HelpNDoc\\Output\\Build html documentation";
+		}else {
+			HELP_FOLDER = DEFAULT_HELP_FOLDER;
 		}
 	}
 	
