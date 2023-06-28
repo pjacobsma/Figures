@@ -5,3 +5,5 @@ Figures allows you to track your banking and credit card transactions by spendin
 
 
 ![alt text](https://github.com/pjacobsma/Figures/blob/main/Accounts.jpg?raw=true)
+
+For more information... (https://pjacobsma.github.io)
