@@ -20,11 +20,13 @@
 package org.bluewindows.figures.javafx;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.FilterSet;
+import org.bluewindows.figures.domain.Transaction;
 import org.bluewindows.figures.enums.FilterField;
 import org.bluewindows.figures.service.ServiceFactory;
 import org.bluewindows.figures.service.impl.javafx.DisplayServiceImplJavaFX;
@@ -223,7 +225,15 @@ public class NewFiltersPane {
     	FilterSettingsPane newFilterPane = new FilterSettingsPane(account.getFilterSet(), (Integer)result.getReturnedObject(), 
     		field.toString(), filterCandidate.getValue());
     	Scene scene = null;
-			scene = new Scene(newFilterPane.getNewFilterPane(), FilterSettingsPane.WIDTH, FilterSettingsPane.HEIGHT);
+		scene = new Scene(newFilterPane.getNewFilterPane(), FilterSettingsPane.WIDTH, FilterSettingsPane.HEIGHT);
+		Transaction lastTransaction;
+		if (field == FilterField.DESCRIPTION) {
+			lastTransaction = getLastTransactionByDescription(account, filterCandidate.getValue());
+		}else {
+			lastTransaction = getLastTransactionByMemo(account, filterCandidate.getValue());
+		}
+		newFilterPane.message.setText("Last transaction using this value - Date: " + lastTransaction.getDate() + ", Amount: " +
+			lastTransaction.getAmount());
 		scene.getStylesheets().add(DisplayServiceImplJavaFX.getCss());
 		Stage stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);
@@ -248,6 +258,25 @@ public class NewFiltersPane {
 		DisplayServiceImplJavaFX.center(stage, scene);
 		stage.show();
 	}
+	
+	private Transaction getLastTransactionByDescription(Account account, String fieldValue) {
+		for (Transaction transaction : account.getTransactions()) {
+			if (transaction.getDescription().equals(fieldValue)) {
+				return transaction;
+			}
+		}
+		return null;
+	}
+	
+	private Transaction getLastTransactionByMemo(Account account, String fieldValue) {
+		for (Transaction transaction : account.getTransactions()) {
+			if (transaction.getMemo().equals(fieldValue)) {
+				return transaction;
+			}
+		}
+		return null;
+	}
+
 	
 	protected EventHandler<ActionEvent> getCloseButtonHandler() {
 		return new EventHandler<ActionEvent>() {
