@@ -20,7 +20,6 @@
 package org.bluewindows.figures.javafx;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.bluewindows.figures.domain.Account;

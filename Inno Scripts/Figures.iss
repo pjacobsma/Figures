@@ -31,7 +31,7 @@ SolidCompression=no
 AllowRootDirectory=True
 AppendDefaultDirName=False
 ArchitecturesInstallIn64BitMode=x64 arm64 ia64
-VersionInfoVersion=1.0
+VersionInfoVersion=1.1
 VersionInfoCompany=BlueWindows.org
 VersionInfoCopyright=2010 Phil Jacobsma
 VersionInfoProductName=Figures
@@ -45,8 +45,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "{#Launch4jDir}\Figures.exe"; DestDir: "{app}"; DestName: "Figures.exe"; Flags: 64bit; Permissions: authusers-full
 Source: "{#Launch4jDir}\LICENSE.TXT"; DestDir: "{app}"; DestName: "LICENSE.TXT";  Permissions: authusers-full
-Source: "{#Launch4jDir}\jasperreports-6.19.1.jar"; DestDir: "{app}"; DestName: "jasperreports-6.19.1.jar";  Permissions: authusers-full
-Source: "{#Launch4jDir}\jasperreports-fonts.jar"; DestDir: "{app}"; DestName: "jasperreports-fonts.jar";  Permissions: authusers-full
+Source: "{#Launch4jDir}\jasperreports-6.20.0.jar"; DestDir: "{app}"; DestName: "jasperreports-6.20.0.jar";  Permissions: authusers-full
+//Source: "{#Launch4jDir}\jasperreports-fonts.jar"; DestDir: "{app}"; DestName: "jasperreports-fonts.jar";  Permissions: authusers-full
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: "{#JavaFXDir}\javafx-sdk-20.0.1\bin\api-ms-win-core-console-l1-1-0.dll"; DestDir: "{app}"; Flags: ignoreversion

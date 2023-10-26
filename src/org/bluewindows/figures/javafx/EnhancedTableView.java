@@ -23,27 +23,54 @@ import javafx.event.EventHandler;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 
 @SuppressWarnings("rawtypes")
 public class EnhancedTableView<S> extends TableView<S> {
+	
+	private boolean removeFocus = false;
 
 	@SuppressWarnings("unchecked")
 	public EnhancedTableView() {
 		// Enable cell editing with single mouse click
 		this.addEventHandler(MouseEvent.MOUSE_CLICKED, (e) -> {
-		    TablePosition<S, ?> focusedCellPos = getFocusModel().getFocusedCell();
+			TablePosition<S, ?> focusedCell = getFocusModel().getFocusedCell();
 		    if (getEditingCell() == null) {
-		    	edit(focusedCellPos.getRow(), focusedCellPos.getTableColumn());
+		    	edit(focusedCell.getRow(), focusedCell.getTableColumn());
 		    }
 		});
 		
-		// Allows clicking on empty cell to unfocus selection
 		this.setRowFactory(categoryTable -> {
 			TableRow<S> row = new TableRow<>();
+			// Allows clicking on empty cell to unfocus selection
 			row.setOnMouseClicked(getUnfocusHandler(row));
 			return row;
-		});	
+		});
+		
+		// Enable copy to clipboard with Crtl-C
+		this.setOnKeyPressed(e -> {
+			if (e.isControlDown() && e.getCode() == KeyCode.C) {
+				StringBuilder buf = new StringBuilder();
+				for (TablePosition<DisplayableTransaction,?> pos: this.getSelectionModel().getSelectedCells()) {
+					Object cell = this.getColumns().get(pos.getColumn()).getCellData(pos.getRow());
+					if (cell != null) {
+						if (buf.length() > 0) {
+							buf.append('\t');
+						}
+						buf.append(cell);
+					}
+				}
+				if (buf.length() > 0) {
+					ClipboardContent cbc = new ClipboardContent();
+					cbc.putString(buf.toString());
+					Clipboard.getSystemClipboard().setContent(cbc);
+				}
+			}
+		});
+
 
 	}
 	
@@ -60,6 +87,20 @@ public class EnhancedTableView<S> extends TableView<S> {
 				};
 			}
 		};
+	}
+	
+	public void refresh() {
+		super.refresh();
+		if (removeFocus) {
+			getSelectionModel().clearSelection();
+		}
+		removeFocus = false;
+	}
+
+	// This is used when updating a cell in the table.  After updating, if the user clicks on another cell
+	// just to trigger the update, we don't want the focus moved to that cell
+	public void setRemoveFocus(boolean removeFocus) {
+		this.removeFocus = removeFocus;
 	}
 	
 }

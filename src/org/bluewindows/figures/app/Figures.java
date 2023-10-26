@@ -66,7 +66,7 @@ import it.sauronsoftware.junique.JUnique;
 
 public class Figures {
 
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "1.1";
 	public static final Integer DATABASE_VERSION = Integer.valueOf(2);
 	public static final String PROPERTY_FILE_NAME = "Figures.properties";
 	public static final String PERSISTENCE_TYPE = "PersistenceType";

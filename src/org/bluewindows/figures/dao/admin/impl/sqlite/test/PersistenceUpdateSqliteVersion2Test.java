@@ -20,8 +20,6 @@
 
 package org.bluewindows.figures.dao.admin.impl.sqlite.test;
 
-import static org.bluewindows.figures.domain.persistence.Persistence.VERSION;
-import static org.bluewindows.figures.domain.persistence.Persistence.VERSION_STORE_NAME;
 import static org.bluewindows.figures.domain.persistence.Persistence.ACCOUNT_STORE_NAME;
 import static org.bluewindows.figures.domain.persistence.Persistence.LAST_FILTER_DATE;
 import static org.junit.Assert.assertEquals;
@@ -29,13 +27,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.bluewindows.figures.app.Figures;
 import org.bluewindows.figures.dao.admin.impl.sqlite.PersistenceUpdateSqliteVersion2;
 import org.bluewindows.figures.dao.impl.sqlite.AccountDaoImplSqlite;
 import org.bluewindows.figures.domain.Account;
 import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.TransactionDate;
-import org.bluewindows.figures.service.ServiceFactory;
 import org.junit.Test;
 
 

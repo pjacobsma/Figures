@@ -95,8 +95,6 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
@@ -104,9 +102,6 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
@@ -223,7 +218,7 @@ public class AccountsTab {
             	ServiceFactory.getInstance().getDisplaySvc().clearStatus();
             	searchTransactionBar.prefHeightProperty().bind(DisplayServiceImplJavaFX.getTabPane().heightProperty());
             	if (openAccount != null) {
-                	refreshDisplay(openAccount);
+    				Platform.runLater(()->refreshDisplay(openAccount));
             	}
             }
         });
@@ -262,9 +257,9 @@ public class AccountsTab {
 	        protected void updateItem(Account item, boolean empty) {
 	            super.updateItem(item, empty) ;
 	            if (empty || item == null) {
-	            	Platform.runLater(()->setText("Choose an Account"));
+	            	setText("Choose an Account");
 	            } else {
-	            	Platform.runLater(()->setText(item.getName()));
+	            	setText(item.getName());
 	            }
 	        }
 	    });
@@ -339,40 +334,7 @@ public class AccountsTab {
 		transactionTable.setPlaceholder(new Label("No transactions found."));
 		transactionTable.setFixedCellSize(Region.USE_COMPUTED_SIZE);
 		transactionTable.getSelectionModel().setCellSelectionEnabled(true);
-		// Enable cell editing with single mouse click
-		transactionTable.addEventHandler(MouseEvent.MOUSE_CLICKED, (e) -> {
-			TablePosition<DisplayableTransaction, ?> focusedCellPos = transactionTable.getFocusModel().getFocusedCell();
-		    if (transactionTable.getEditingCell() == null) {
-		    	transactionTable.edit(focusedCellPos.getRow(), focusedCellPos.getTableColumn());
-		    }
-		});
-		// Enable copy to clipboard with Crtl-C
 		transactionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		transactionTable.setOnKeyPressed(e -> {
-			if (e.isControlDown() && e.getCode() == KeyCode.C) {
-				StringBuilder buf = new StringBuilder();
-				for (TablePosition<DisplayableTransaction,?> pos: transactionTable.getSelectionModel().getSelectedCells()) {
-					Object cell = transactionTable.getColumns().get(pos.getColumn()).getCellData(pos.getRow());
-					if (cell != null) {
-						if (buf.length() > 0) {
-							buf.append('\t');
-						}
-						buf.append(cell);
-					}
-				}
-				if (buf.length() > 0) {
-					ClipboardContent cbc = new ClipboardContent();
-					cbc.putString(buf.toString());
-					Clipboard.getSystemClipboard().setContent(cbc);
-				}
-			}
-		});
-		// Allows clicking on empty cell to unfocus selection
-		transactionTable.setRowFactory(transactionTable -> {
-			TableRow<DisplayableTransaction> row = new TableRow<>();
-			row.setOnMouseClicked(getUnfocusHandler(row));
-			return row;
-		});	
 		
 		TableColumn<DisplayableTransaction, Integer> numberColumn = new TableColumn<DisplayableTransaction, Integer>("Number");
 		numberColumn.setPrefWidth(70);
@@ -871,7 +833,6 @@ public class AccountsTab {
 
 		depositsCountLabel = new Text("Deposits Count:");
 		depositsGrid.add(depositsCountLabel, 0, 0);
-
 		depositsCount = new TextField("");
 		depositsCount.setEditable(false);
 		depositsCount.getStyleClass().remove("text-field");
@@ -952,43 +913,27 @@ public class AccountsTab {
 			        if (!newCategorySplitPane.isCanceled()) {
 						loadAndDisplayTransactions(openAccount);
 			        }
-					Platform.runLater(()->baseVBox.requestFocus());
+					baseVBox.requestFocus();
 			    });
 				DisplayServiceImplJavaFX.center(stage, scene);
 				stage.show();
 				// Set focus on base grid rather than any particular control
-				Platform.runLater(()->newCategorySplitPane.getBasePane().requestFocus());
+				newCategorySplitPane.getBasePane().requestFocus();
 			}
 		};
 	}
 	
-	// This handler removes the focus from the last selected cell when the user 
-	// clicks on an empty row.  It allows the user to click away from a cell 
-	// even when they click on an empty row
-	@SuppressWarnings("rawtypes")
-	private EventHandler<MouseEvent> getUnfocusHandler(TableRow row) {
-		return new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent arg0) {
-				if (row.emptyProperty().getValue()) { 
-					transactionTable.getSelectionModel().clearSelection();
-		        	return; 
-				};
-			}
-		};
-	}
-
 	private EventHandler<ActionEvent> getAccountComboHandler() {
 		return new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
 				if (accountCombo.getSelectionModel().getSelectedIndex() != -1 && accountCombo.getItems().size() > 0) {
 					openAccount = (Account) accountCombo.getSelectionModel().getSelectedItem();
-					Platform.runLater(()->accountCombo.getStyleClass().add("selected-bold"));
-					Platform.runLater(()->importButton.setDisable(false));
+					accountCombo.getStyleClass().add("selected-bold");
+					importButton.setDisable(false);
 				}else {
-					Platform.runLater(()->accountCombo.getStyleClass().remove("selected-bold"));
-					Platform.runLater(()->importButton.setDisable(true));
+					accountCombo.getStyleClass().remove("selected-bold");
+					importButton.setDisable(true);
 				}
 				searchActive = false;
 				if (openAccount != null) {
@@ -998,6 +943,7 @@ public class AccountsTab {
 				}else {
 					setAccountButtonsDisabled(true);
 				}
+				ServiceFactory.getInstance().getDisplaySvc().clearStatus();
 			}
 		};
 	}
@@ -1023,7 +969,7 @@ public class AccountsTab {
 				DisplayServiceImplJavaFX.center(stage, scene);
 				stage.show();
 				// Set focus on base grid rather than any particular control
-				Platform.runLater(()->accountSettingsPane.getBasePane().requestFocus());
+				accountSettingsPane.getBasePane().requestFocus();
 			}
 		};
 	}
@@ -1200,7 +1146,7 @@ public class AccountsTab {
 			}else {
 				Platform.runLater(()->accountCombo.getSelectionModel().clearSelection());
 			}
-			setAccountButtonsDisabled(false);
+			Platform.runLater(()->setAccountButtonsDisabled(false));
         }else {
         	openAccount = null;
         	Platform.runLater(()->setAccountButtonsVisible(false));
@@ -1381,13 +1327,9 @@ public class AccountsTab {
 								}else {
 						        	ServiceFactory.getInstance().getDisplaySvc().setStatusGood("Imported " + importCount + " transactions.");
 								}
-					            Platform.runLater(new Runnable() {
-					                @Override public void run() {
-					    				Account accountSelected = (Account) accountCombo.getSelectionModel().getSelectedItem();
-					    				refreshDisplay(accountSelected);
-					    				resetSearchControls();
-					                }
-					            });
+			    				Account accountSelected = (Account) accountCombo.getSelectionModel().getSelectedItem();
+			    				refreshDisplay(accountSelected);
+			    				resetSearchControls();
 					        }else {
 					        	ServiceFactory.getInstance().getDisplaySvc().setStatusBad(result);
 					        }
@@ -1650,11 +1592,11 @@ public class AccountsTab {
            		if (accountTimestamp.before(Figures.accountTimestamp)) loadAccounts();
         		if (categoryTimestamp.before(Figures.categoryTimestamp)) {
         			loadCategories();
-           			loadAndDisplayTransactions(account);
+        			loadAndDisplayTransactions(account);
            			return null;
         		}
         		if (transactionTimestamp.before(Figures.transactionTimestamp)) {
-            		loadAndDisplayTransactions(account);
+        			loadAndDisplayTransactions(account);
             	}
         		return null;
 			}
@@ -1675,56 +1617,74 @@ public class AccountsTab {
 		new Thread(refreshTask).start();
 	}
 	
-	private CallResult loadAndDisplayTransactions(Account account) {
-		sortOrder.clear();
-		if (transactionTable.getSortOrder().size() > 0) {
-			sortOrder.addAll(transactionTable.getSortOrder());
-		}
-		CallResult result = loadTransactions(account);
-		if (result.isGood()) {
-			if (account.getTransactionCount() == 0) {
-				searchTransactionBar.setVisible(false);
-				transactionTable.setVisible(false);
-				setTransactionButtonsVisible(false);
-				Platform.runLater(()->importButton.requestFocus());
-				ServiceFactory.getInstance().getDisplaySvc().setStatusHelp("Download your transactions as a QIF (Quicken) or OFX (Microsoft Money) file, then use the Import button to import them.");
-				return result;
-			}
-			List<DisplayableTransaction> displayTransactionList;
-			if (searchActive) {
-				displayTransactionList = getSearchResults(getSearchCriteria());
-			}else {
-				displayTransactionList = new ArrayList<DisplayableTransaction>();
-				for (Transaction transaction : transactions) {
-					displayTransactionList.add(new DisplayableTransaction(transaction));
+	private void loadAndDisplayTransactions(Account account) {
+		Task<Object> loadTask = new Task<Object>() {
+			@Override protected Object call() throws Exception {
+				sortOrder.clear();
+				if (transactionTable.getSortOrder().size() > 0) {
+					sortOrder.addAll(transactionTable.getSortOrder());
 				}
+				CallResult result = loadTransactions(account);
+				if (result.isGood()) {
+					if (account.getTransactionCount() == 0) {
+						searchTransactionBar.setVisible(false);
+						transactionTable.setVisible(false);
+						setTransactionButtonsVisible(false);
+						importButton.requestFocus();
+						ServiceFactory.getInstance().getDisplaySvc().setStatusHelp("Download your transactions as a QIF (Quicken) or OFX (Microsoft Money) file, then use the Import button to import them.");
+						return result;
+					}
+					List<DisplayableTransaction> displayTransactionList;
+					if (searchActive) {
+						displayTransactionList = getSearchResults(getSearchCriteria());
+					}else {
+						displayTransactionList = new ArrayList<DisplayableTransaction>();
+						for (Transaction transaction : transactions) {
+							displayTransactionList.add(new DisplayableTransaction(transaction));
+						}
+					}
+			        transactionTable.setRemoveFocus(true);
+					displayTransactions(displayTransactionList);
+					transactionTable.prefHeightProperty().bind(transactionTable.fixedCellSizeProperty().multiply(transactionTable.getItems().size()).add(2.1));
+					// Preserve the sort order, if any
+					if (sortOrder.size() > 0) {
+				        Platform.runLater(new Runnable() {
+				            @Override public void run() {
+				            	transactionTable.getSortOrder().clear();
+				            	transactionTable.getSortOrder().addAll(sortOrder);
+				            	transactionTable.sort();
+				            }
+				        });
+					}
+			        Platform.runLater(new Runnable() {
+			            @Override public void run() {
+			    			resetDatePickers();
+			    			searchTransactionBar.setVisible(true);
+			    			transactionTable.setVisible(true);
+			    			setTransactionButtonsVisible(true);
+			            }
+			        });
+					transactionTimestamp = new Timestamp(System.currentTimeMillis());
+				}else {
+					DisplayServiceImplJavaFX.statusMessage.setText(result.getErrorMessage());
+				}
+        		return result;
 			}
-			displayTransactions(displayTransactionList);
-			transactionTable.prefHeightProperty().bind(transactionTable.fixedCellSizeProperty().multiply(transactionTable.getItems().size()).add(2.1));
-			transactionTable.refresh();
-			// Preserve the sort order, if any
-			if (sortOrder.size() > 0) {
-		        Platform.runLater(new Runnable() {
-		            @Override public void run() {
-		            	transactionTable.getSortOrder().clear();
-		            	transactionTable.getSortOrder().addAll(sortOrder);
-		            	transactionTable.sort();
-		            }
-		        });
-			}
-	        Platform.runLater(new Runnable() {
-	            @Override public void run() {
-	    			resetDatePickers();
-	    			searchTransactionBar.setVisible(true);
-	    			transactionTable.setVisible(true);
-	    			setTransactionButtonsVisible(true);
-	            }
-	        });
-			transactionTimestamp = new Timestamp(System.currentTimeMillis());
-		}else {
-			DisplayServiceImplJavaFX.statusMessage.setText(result.getErrorMessage());
-		}
-		return result;
+		};
+		loadTask.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+			@Override
+		    public void handle(WorkerStateEvent t) {
+				ServiceFactory.getInstance().getDisplaySvc().setCursor(CursorType.DEFAULT);
+		    }
+		});
+		loadTask.setOnFailed(new EventHandler<WorkerStateEvent>() {
+			@Override
+		    public void handle(WorkerStateEvent t) {
+				ServiceFactory.getInstance().getDisplaySvc().setCursor(CursorType.DEFAULT);
+		    }
+		});
+		ServiceFactory.getInstance().getDisplaySvc().setCursor(CursorType.WAIT);
+		new Thread(loadTask).start();
 	}
 
 	private void setAccountButtonsVisible(boolean visible) {
@@ -1771,9 +1731,9 @@ public class AccountsTab {
 	private void displayTransactions(List<DisplayableTransaction> displayTransactionList) {
         Platform.runLater(new Runnable() {
             @Override public void run() {
-				setAccountButtonsDisabled(false);
-            	transactionTable.setItems(FXCollections.observableArrayList(displayTransactionList));
-            	transactionTable.refresh();
+        		setAccountButtonsDisabled(false);
+        		transactionTable.setItems(FXCollections.observableArrayList(displayTransactionList));
+        		transactionTable.refresh();
             	calculateTotals(displayTransactionList);
             }
         });

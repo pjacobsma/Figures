@@ -264,6 +264,7 @@ public class CategoriesTab {
 		            }
 		        });
 			}
+			categoryTable.setRemoveFocus(true);
 			Platform.runLater(()->categoryTable.refresh());
 		}
 		return result;
