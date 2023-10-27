@@ -1656,9 +1656,9 @@ public class AccountsTab {
 				            }
 				        });
 					}
+	            	if (!searchActive) resetDatePickers();
 			        Platform.runLater(new Runnable() {
 			            @Override public void run() {
-			    			resetDatePickers();
 			    			searchTransactionBar.setVisible(true);
 			    			transactionTable.setVisible(true);
 			    			setTransactionButtonsVisible(true);
