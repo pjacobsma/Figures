@@ -42,7 +42,9 @@ import static org.junit.Assert.assertTrue;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.bluewindows.figures.app.Figures;
@@ -83,6 +85,7 @@ public class AbstractDaoImplSqliteTestCase {
 		properties.setProperty(Figures.DATE_FORMAT_NAME, Figures.DEFAULT_DATE_FORMAT);
 		Figures.dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		Figures.setProperties(properties);
+		Figures.currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault());
 		Figures.configureLogging();
 	}
 	
@@ -150,6 +153,18 @@ public class AbstractDaoImplSqliteTestCase {
 		rs.getStatement().close();
 		return rowCount;
 	}
+	
+	protected int countFilterRows() throws SQLException {
+		Statement stmt = persistenceAdmin.getConnection().createStatement();
+		int rowCount = 0;
+		ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + FILTER_STORE_NAME); 
+		if (rs.next()){
+			rowCount = rs.getInt(1);
+		}
+		rs.getStatement().close();
+		return rowCount;
+	}
+
 	
 	protected int countTransactionCategoryRows(int transactionID) throws SQLException {
 		Statement stmt = persistenceAdmin.getConnection().createStatement();

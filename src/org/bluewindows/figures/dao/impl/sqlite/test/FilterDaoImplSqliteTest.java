@@ -94,6 +94,15 @@ public class FilterDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 		result = filterDao.getFilters(1);
 		assertEquals(0, ((List<Filter>)result.getReturnedObject()).size());
 	}
+	
+	@Test
+	public void testAddFilter() throws Exception {
+		Filter filter = new Filter(1, 1, 1, "Description", "Ends With",
+			"DISCOVE", "Replace Description With", "DISCOVER PLUS", false, Integer.valueOf(1));
+		CallResult result = filterDao.addFilter(filter);
+		assertTrue(result.isGood());
+		assertEquals(1, countFilterRows());
+	}
 
 	@Test
 	public void testGetMaxSequenceHappyPath() throws Exception {
@@ -105,5 +114,5 @@ public class FilterDaoImplSqliteTest extends AbstractDaoImplSqliteTestCase {
 		assertTrue(result.isGood());
 		assertEquals(Integer.valueOf(100), result.getReturnedObject());
 	}
-
+	
 }

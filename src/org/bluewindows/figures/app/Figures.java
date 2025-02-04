@@ -20,7 +20,6 @@
 
 package org.bluewindows.figures.app;
 
-import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -85,7 +84,7 @@ public class Figures {
 	public static DateTimeFormatter dateFormat;
 	public static NumberFormat currencyFormat;
 	public static String currencySymbol;
-	public static String fontName;
+//	public static String fontName;
 	public static boolean persistenceExpected = false;
 	public static Properties properties;
 	public static Logger logger;
@@ -136,7 +135,6 @@ public class Figures {
 			checkDefaultDataFolder();
 			checkDefaultHelpFolder();
 			configureLogging();
-			setReportFont();
 		} catch (Exception e) {
 			logStackTrace(e);
 			System.exit(1);
@@ -215,35 +213,29 @@ public class Figures {
 		}
 	}
 
-	private static void setReportFont() {
-		String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-	    for (int i = 0; i < fonts.length; i++) {
-	    	if (fonts[i].trim().equals("Arial")) {
-	    		fontName = "Arial";
-	    		return;
-	    	}
-	    }
-	    for (int i = 0; i < fonts.length; i++) {
-	    	if (fonts[i].trim().equals("Helvetica")) {
-	    		fontName = "Helvetica";
-	    		return;
-	    	}
-		}
-	    for (int i = 0; i < fonts.length; i++) {
-	    	if (fonts[i].trim().equals("Tahoma")) {
-	    		fontName = "Tahoma";
-	    		return;
-	    	}
-		}
-	    for (int i = 0; i < fonts.length; i++) {
-	    	if (fonts[i].trim().equals("Calibri")) {
-	    		fontName = "Calibri";
-	    		return;
-	    	}
-		}
-	    logger.severe("Cannot find a usable system font.  Need Arial, Helvetica, or Tahoma.");
-	    System.exit(1);
-	}
+//	private static void setReportFont() {
+//		String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+//	    for (int i = 0; i < fonts.length; i++) {
+//	    	if (fonts[i].trim().equals("Helvetica")) {
+//	    		fontName = "Helvetica";
+//	    		return;
+//	    	}
+//		}
+//	    for (int i = 0; i < fonts.length; i++) {
+//	    	if (fonts[i].trim().equals("Tahoma")) {
+//	    		fontName = "Tahoma";
+//	    		return;
+//	    	}
+//		}
+//	    for (int i = 0; i < fonts.length; i++) {
+//	    	if (fonts[i].trim().equals("Calibri")) {
+//	    		fontName = "Calibri";
+//	    		return;
+//	    	}
+//		}
+//	    logger.severe("Cannot find a usable system font.  Need Arial, Helvetica, or Tahoma.");
+//	    System.exit(1);
+//	}
 	
 	public static void logStackTrace(Exception ex) {
 		Writer buffer = new StringWriter();

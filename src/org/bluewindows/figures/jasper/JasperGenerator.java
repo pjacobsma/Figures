@@ -56,8 +56,8 @@ public class JasperGenerator {
 
 	private static final int RUN_DATE_WIDTH = 80;
 	private static final int PAGE_TEXT_WIDTH = 24;
-	private static final int PAGE_NUMBER_WIDTH = 20;
-	private static final int OF_TEXT_WIDTH = 8;
+	private static final int PAGE_NUMBER_WIDTH = 26;
+	private static final int OF_TEXT_WIDTH = 10;
 	private static AffineTransform affinetransform = new AffineTransform();
 	private static FontRenderContext frc = new FontRenderContext(affinetransform, true, true);
 

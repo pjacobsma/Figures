@@ -66,7 +66,8 @@ import net.sf.jasperreports.engine.design.JasperDesign;
 
 public class ReportServiceImplJasper implements ReportService {
 
-	private static final String PDF_ENCODING = "UTF-8";
+	private static final String PDF_FONT = "Arial"; 
+	private static final String PDF_ENCODING = "Identity-H"; 
 	private static final int FONT_SIZE = 9;
 	private static final int TITLE_FONT_SIZE = 14;
 	private static final int TITLE_HEIGHT = 20;
@@ -90,8 +91,8 @@ public class ReportServiceImplJasper implements ReportService {
 	}
 	
 	private void setLayoutDefaults(JasperSpecification spec) {
-		spec.setFontName(Figures.fontName);
-		spec.setPdfFontName(Figures.fontName);
+		spec.setFontName(PDF_FONT);
+		spec.setPdfFontName(PDF_FONT);
 		spec.setPdfEncoding(PDF_ENCODING);
 		spec.setFontSize(FONT_SIZE);
 		spec.setTitleFontSize(TITLE_FONT_SIZE);
@@ -129,7 +130,7 @@ public class ReportServiceImplJasper implements ReportService {
 			JasperDesign design = reportGenerator.createDesign(spec);
 	        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(printableTransactions);
 			print = createJasperReport(design, dataSource);
-		} catch (JRException e) {
+		} catch (Exception e) {
 			Figures.logger.severe(e.getLocalizedMessage());
 			return result.setCallBad("Summary Report Creation Error", e.getLocalizedMessage());
 		}
@@ -201,7 +202,7 @@ public class ReportServiceImplJasper implements ReportService {
 			JasperDesign design = reportGenerator.createDesign(spec);
 	        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(summaries);
 			print = createJasperReport(design, dataSource);
-		} catch (JRException e) {
+		} catch (Exception e) {
 			Figures.logger.severe(e.getCause().getLocalizedMessage());
 			return result.setCallBad("Summary Report Creation Error", e.getLocalizedMessage());
 		}

@@ -163,6 +163,8 @@ public class Filter {
 			searchStrategy = new SearchEquals();
 		}else if (expression == FilterExpression.STARTSWITH){
 			searchStrategy = new SearchStarts();
+		}else if (expression == FilterExpression.ENDSWITH){
+			searchStrategy = new SearchEnds();
 		}	
 	}
 	

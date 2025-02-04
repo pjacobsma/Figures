@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
 
+import org.bluewindows.figures.app.Figures;
+import org.bluewindows.figures.service.ServiceFactory;
+
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -169,7 +172,8 @@ public class JasperFXport {
 		exporter.setConfiguration(reportConfig);
 		try {
 			exporter.exportReport();
-		} catch (JRException e) {
+		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e.getLocalizedMessage());
 		}
 		return outputStream.toString();
@@ -282,14 +286,14 @@ public class JasperFXport {
 			}
 			previousValue = checkValue;
             if (checkValue >= verticalBar.getMax()) {
-            	if (pageSlider.getValue() < jasperPrint.getPages().size()) {
+            	if (pageSlider != null && pageSlider.getValue() < jasperPrint.getPages().size()) {
             		pageSlider.setValue(pageSlider.getValue() + 1);
             		previousValue = Double.valueOf(0);
             	}else {
             		previousValue = Double.valueOf(verticalBar.getMax());
             	}
             }else if (checkValue <= verticalBar.getMin()) {
-            	if (pageSlider.getValue() > 0) {
+            	if (pageSlider != null && pageSlider != null && pageSlider.getValue() > 0) {
             		pageSlider.setValue(pageSlider.getValue() - 1);
             	}
         		previousValue = Double.valueOf(0);
@@ -407,6 +411,10 @@ public class JasperFXport {
 		}
 		return buttonBar;
 	}
+	
+	private void exportToPDF() {
+		
+	}
 
 	private File getOutputFile(String title, ExtensionFilter extension) {
 		FileChooser fileChooser = new FileChooser();
@@ -418,7 +426,7 @@ public class JasperFXport {
 	private void printReport() {
 		try {
 			JasperPrintManager.printReport(jasperPrint, true);
-		} catch (JRException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getLocalizedMessage());
 		}
@@ -429,33 +437,31 @@ public class JasperFXport {
 		File file = getOutputFile("Save as PDF", extension);
 		if (file != null) {
 			displayPane.getScene().setCursor(Cursor.WAIT);
-			Service<Object> exportTask = new Service<Object>() {
+			Service<Boolean> exportTask = new Service<Boolean>() {
 				@Override
-				protected Task<Object> createTask() {
-					return new Task<Object>() {
+				protected Task<Boolean> createTask() {
+					return new Task<Boolean>() {
 						@Override
-						protected Object call() throws Exception {
-							FileOutputStream fos = null;
+						protected Boolean call() throws Exception {
 							try {
 								JasperExportManager.exportReportToPdfFile(jasperPrint, file.getAbsoluteFile().getAbsolutePath());
-							} catch (JRException e) {
-								e.printStackTrace();
-								throw new RuntimeException(e.getLocalizedMessage());
-							}finally {
-								if (fos != null) {
-				                    fos.close();
-								}
+							} catch (Exception e) {
+								Figures.logStackTrace(e);
+								return false;
 							}
-							return null;
+							return true;
 						}
 					};
 				}
 			};
-			exportTask.start();
 			exportTask.setOnSucceeded(s -> {
 				displayPane.getScene().setCursor(Cursor.DEFAULT);
+				if (exportTask.getValue().equals(Boolean.FALSE)){
+					ServiceFactory.getInstance().getDisplaySvc().displayErrorMessage("Export failed", "See Figures log for details");
+				}
 				return;
 			});
+			exportTask.start();
 		}
 	}
 

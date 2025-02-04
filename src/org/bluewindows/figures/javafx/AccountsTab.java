@@ -374,6 +374,8 @@ public class AccountsTab {
 			String description = ((TableColumn.CellEditEvent<DisplayableTransaction, String>) t).getNewValue();
 	        Transaction transaction = ((TableColumn.CellEditEvent<DisplayableTransaction, String>) t).getTableView().getItems().get(index);
 			if (!description.equals(transaction.getDescription())) {
+				// Prevent clicking on category to update category before this update finishes
+				transactionTable.getSelectionModel().clearSelection();
 				transaction.setDescription(description);
 				transaction.setUserChangedDesc(true);
 				editedIdCriteria.add(new IdCriterion(transaction.getID()));
@@ -894,6 +896,9 @@ public class AccountsTab {
 		        	return; 
 				};
 		        Transaction transaction = transactionTable.getSelectionModel().getSelectedItem();
+		        if (transaction == null) {
+		        	return;
+		        }
 		        editedIdCriteria.add(new IdCriterion(transaction.getID()));
 		        CallResult result = ServiceFactory.getInstance().getPersistenceSvc().getCategories();
 		        if (result.isBad()){
