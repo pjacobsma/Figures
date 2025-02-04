@@ -45,8 +45,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "{#Launch4jDir}\Figures.exe"; DestDir: "{app}"; DestName: "Figures.exe"; Flags: 64bit; Permissions: authusers-full
-Source: "{#Launch4jDir}\LICENSE.TXT"; DestDir: "{app}"; DestName: "LICENSE.TXT";  Permissions: authusers-full
+Source: "{#Launch4jDir}\Figures.exe"; DestDir: "{app}"; DestName: "Figures.exe"; Flags: 64bit ignoreversion; Permissions: authusers-full
+Source: "{#Launch4jDir}\LICENSE.TXT"; DestDir: "{app}"; DestName: "LICENSE.TXT";  Flags: ignoreversion; Permissions: authusers-full
 ;Source: "{#Launch4jDir}\jasperreports-6.21.4.jar"; DestDir: "{app}"; DestName: "jasperreports-6.21.4.jar";  Permissions: authusers-full
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
