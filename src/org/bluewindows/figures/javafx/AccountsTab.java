@@ -64,6 +64,7 @@ import org.bluewindows.figures.enums.Deductible;
 import org.bluewindows.figures.enums.DeductibleInclusion;
 import org.bluewindows.figures.enums.ExportType;
 import org.bluewindows.figures.enums.FilterField;
+import org.bluewindows.figures.enums.TransactionInclusion;
 import org.bluewindows.figures.enums.UncategorizedInclusion;
 import org.bluewindows.figures.service.ServiceFactory;
 import org.bluewindows.figures.service.impl.javafx.DisplayServiceImplJavaFX;
@@ -1565,7 +1566,15 @@ public class AccountsTab {
 		}
 		NewFiltersPane newFiltersPane = new NewFiltersPane();
 		ServiceFactory.getInstance().getDisplaySvc().clearStatus();
-		Pane filtersPane = newFiltersPane.getNewFiltersPane(accountSelected, strings, field);
+		TransactionInclusion inclusion;
+		if (depositsOnlySelected) {
+			inclusion = TransactionInclusion.DEPOSITS;
+		}else if (withdrawalsOnlySelected) {
+			inclusion = TransactionInclusion.WITHDRAWALS;
+		}else {
+			inclusion = TransactionInclusion.ALL;
+		}
+		Pane filtersPane = newFiltersPane.getNewFiltersPane(accountSelected, strings, field, inclusion);
 		Scene scene = new Scene(filtersPane, filtersPane.getPrefWidth()+6, newFiltersPane.getHeight(strings.size())+6);
 		scene.getStylesheets().add(DisplayServiceImplJavaFX.getCss());
 		Stage stage = new Stage();

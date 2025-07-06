@@ -27,6 +27,7 @@ import org.bluewindows.figures.domain.CallResult;
 import org.bluewindows.figures.domain.FilterSet;
 import org.bluewindows.figures.domain.Transaction;
 import org.bluewindows.figures.enums.FilterField;
+import org.bluewindows.figures.enums.TransactionInclusion;
 import org.bluewindows.figures.service.ServiceFactory;
 import org.bluewindows.figures.service.impl.javafx.DisplayServiceImplJavaFX;
 
@@ -69,8 +70,10 @@ public class NewFiltersPane {
 	private Button closeButton;
 	private TextArea statusMessage;
 	private boolean dataChanged;
+	private TransactionInclusion inclusion;
 	
-	public Pane getNewFiltersPane(Account account, List<String> prospects, FilterField field) {
+	public Pane getNewFiltersPane(Account account, List<String> prospects, FilterField field, TransactionInclusion inclusion) {
+		this.inclusion = inclusion;
 		basePane = new Pane();
 		basePane.setPrefWidth(WIDTH);
 
@@ -261,7 +264,13 @@ public class NewFiltersPane {
 	private Transaction getLastTransactionByDescription(Account account, String fieldValue) {
 		for (Transaction transaction : account.getTransactions()) {
 			if (transaction.getDescription().equals(fieldValue)) {
-				return transaction;
+				if (inclusion.equals(TransactionInclusion.ALL)) {
+					return transaction;
+				}else if (inclusion.equals(TransactionInclusion.WITHDRAWALS) && (!transaction.getAmount().isCredit())) {
+					return transaction;
+				}else if (inclusion.equals(TransactionInclusion.DEPOSITS) && transaction.getAmount().isCredit()) {
+					return transaction;
+				}
 			}
 		}
 		return null;
@@ -270,7 +279,13 @@ public class NewFiltersPane {
 	private Transaction getLastTransactionByMemo(Account account, String fieldValue) {
 		for (Transaction transaction : account.getTransactions()) {
 			if (transaction.getMemo().equals(fieldValue)) {
-				return transaction;
+				if (inclusion.equals(TransactionInclusion.ALL)) {
+					return transaction;
+				}else if (inclusion.equals(TransactionInclusion.WITHDRAWALS) && (!transaction.getAmount().isCredit())) {
+					return transaction;
+				}else if (inclusion.equals(TransactionInclusion.DEPOSITS) && transaction.getAmount().isCredit()) {
+					return transaction;
+				}
 			}
 		}
 		return null;
